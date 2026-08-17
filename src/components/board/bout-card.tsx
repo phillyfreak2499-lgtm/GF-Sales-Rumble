@@ -1,7 +1,7 @@
 import type { BoardPayload } from "@/lib/server/circuit";
 import { writeBoutPreview, writeBoutRecap, formatRecord, recordOf } from "@/lib/circuit/copy";
 import { fighterById } from "@/lib/use-board";
-import { RingCard, VsMark } from "@/components/arena/ring";
+import { RingCard, Ticket, VsMark } from "@/components/arena/ring";
 import { Seed } from "./pieces";
 
 export function BoutCard({
@@ -34,21 +34,21 @@ export function BoutCard({
   const people = m.fighterIds.map((id) => fighterById(board, id)).filter(Boolean);
 
   return (
-    <RingCard className="p-5 sm:p-6">
-      <p className="kicker">{copy.title}</p>
+    <RingCard className="p-5 sm:p-7">
+      <Ticket>{copy.title}</Ticket>
       {m.kind === "singles" && people.length === 2 ? (
-        <div className="mt-4 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:gap-4">
-          <p className="min-w-0 flex-1 font-display text-2xl italic leading-tight sm:text-3xl">
+        <div className="mt-5 flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:gap-5">
+          <p className="min-w-0 flex-1 font-display text-3xl italic leading-[0.95] sm:text-4xl">
             <Seed n={people[0]!.seed} /> {people[0]!.nickname}
           </p>
           <VsMark />
-          <p className="min-w-0 flex-1 font-display text-2xl italic leading-tight sm:text-right sm:text-3xl">
+          <p className="min-w-0 flex-1 font-display text-3xl italic leading-[0.95] sm:text-right sm:text-4xl">
             <Seed n={people[1]!.seed} /> {people[1]!.nickname}
           </p>
         </div>
       ) : null}
       {m.kind === "singles" && people.length === 2 ? (
-        <p className="mt-2 text-sm text-muted">
+        <p className="mt-3 text-sm text-muted">
           {formatRecord(recordOf(people[0]!.id, board.placements))}
           {people[0]!.hometown ? ` · ${people[0]!.hometown}` : ""}
           <span className="mx-2 text-subtle">/</span>
@@ -56,7 +56,7 @@ export function BoutCard({
           {people[1]!.hometown ? ` · ${people[1]!.hometown}` : ""}
         </p>
       ) : null}
-      <p className="mt-4 text-sm leading-relaxed text-muted">{copy.body}</p>
+      <p className="mt-5 text-sm leading-relaxed text-muted">{copy.body}</p>
     </RingCard>
   );
 }

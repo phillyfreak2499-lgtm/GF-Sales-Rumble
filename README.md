@@ -1,8 +1,14 @@
 # Waterman Rumble
 
-A shared sales wrestling circuit for every Waterman / Good Feet store. One site. One locker room. The floor marks the scores. The commissioner locks the week. Brackets, drops, and gazette write-ups run themselves.
+A shared sales wrestling circuit for every Waterman / Good Feet store. **One site. One locker. Every store marks the scores.**
+
+The floor fills the cards. The commissioner locks the week. Brackets, drops, and gazette write-ups run themselves.
 
 Built for Period 10 — five weeks, three floors (Main Event, Redemption, Royal Rumble), unlimited roster.
+
+**Live scoring needs one deployed copy of this repo.** Do not give each store its own clone-and-run — they would each get a separate locker. Deploy once (Vercel + Postgres), then send every store the same URL.
+
+Repo: [github.com/phillyfreak2499-lgtm/GF-Sales-Rumble](https://github.com/phillyfreak2499-lgtm/GF-Sales-Rumble)
 
 ## Who uses it
 
@@ -43,6 +49,28 @@ Five metrics (rename them on the desk):
 5. Commissioner **locks scores**, then **closes the week**. Winners stay. A loss drops one floor. The gazette writes itself.
 6. Repeat through week 5. Each floor gets a champion.
 
+## Deploy one shared site (all stores)
+
+This is the production path. Local `npm run dev` is a demo locker that lives only on that machine.
+
+1. Fork or clone this repo.
+2. Create a Postgres database (Neon is the usual match — any `postgres://` URL works).
+3. Import the repo on [Vercel](https://vercel.com). Framework: Vite. Build command: `npm run build`.
+4. Set these environment variables on the project:
+
+   | Name | Value |
+   | --- | --- |
+   | `DATABASE_URL` | The Postgres URL (pooled is fine) |
+   | `BETTER_AUTH_SECRET` | A long random string |
+   | `BETTER_AUTH_URL` | The live site URL, e.g. `https://your-app.vercel.app` |
+   | `VITE_PUBLIC_HOSTNAME` | Host only, e.g. `your-app.vercel.app` |
+
+5. Deploy. `npm run build` also runs `npm run db:migrate` and applies `migrations/`.
+6. Send every store the same URL. They open **Score** and mark cards. No password.
+7. Change `DESK_PIN` in `src/lib/circuit/types.ts` before go-live if you do not want `cogs`.
+
+Without `DATABASE_URL`, the app falls back to an in-memory PGLite database. That is fine for a local demo and **not** fine for a shared production locker — each serverless instance would forget the scores.
+
 ## Run it locally
 
 ```bash
@@ -50,14 +78,12 @@ npm install
 npm run dev
 ```
 
-The app listens on `0.0.0.0:8080`. Data lives in PGLite (no Postgres required for a single-store demo). Point `DATABASE_URL` at Postgres if you want a shared production database.
+The app listens on `0.0.0.0:8080`. Data lives in PGLite unless `DATABASE_URL` is set.
 
 ```bash
 npm run typecheck
 npm run build
 ```
-
-Production build targets Vercel (`nitro` preset). Set auth secrets in the host environment — never commit them.
 
 ## Commissioner password
 

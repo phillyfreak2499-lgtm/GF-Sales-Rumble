@@ -8,7 +8,7 @@ export function MonoMark({ first, last, className }: { first: string; last: stri
   return (
     <span
       className={cn(
-        "grid size-11 shrink-0 place-items-center rounded-sm border border-bone/25 bg-raised text-sm font-medium tracking-wide text-bone",
+        "grid size-11 shrink-0 place-items-center rounded-sm border border-bone/30 bg-raised font-display text-sm italic tracking-wide text-bone",
         className,
       )}
     >
@@ -29,7 +29,7 @@ export function Points({ card }: { card: Scorecard | null | undefined }) {
   if (!card) return <span className="text-subtle">No card</span>;
   return (
     <span className="inline-flex items-baseline gap-1.5 tabular">
-      <span className="text-fg">{card.points}</span>
+      <span className="font-display text-lg italic text-fg">{card.points}</span>
       <span className="text-subtle">pts</span>
       {card.sweep ? <span className="text-[11px] uppercase tracking-[0.12em] text-sage">Sweep</span> : null}
     </span>

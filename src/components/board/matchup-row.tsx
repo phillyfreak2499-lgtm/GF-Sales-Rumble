@@ -4,7 +4,7 @@ import { formatRecord, recordOf } from "@/lib/circuit/copy";
 import { BRACKET_LABEL, type MetricStatus, type Placement } from "@/lib/circuit/types";
 import { cn } from "@/lib/utils";
 import { fighterById } from "@/lib/use-board";
-import { RingCard, VsMark } from "@/components/arena/ring";
+import { RingCard, Ticket, VsMark } from "@/components/arena/ring";
 import { BracketChip, FighterLink, MetricPips, MonoMark, Points, Seed } from "./pieces";
 
 export function MatchupRow({
@@ -40,7 +40,7 @@ export function MatchupRow({
       <RingCard>
         <div className="mb-4 flex items-center justify-between gap-3">
           <BracketChip id={m.bracket} />
-          <span className="kicker text-subtle">Free-for-all</span>
+          <Ticket>Free-for-all</Ticket>
         </div>
         <ul className="space-y-2">
           {ranked.map(({ f, card, s }) =>
@@ -88,7 +88,7 @@ export function MatchupRow({
               </p>
             </div>
           </div>
-          <span className="kicker text-subtle">Bye</span>
+          <Ticket>Bye</Ticket>
         </div>
       </RingCard>
     );
@@ -105,9 +105,9 @@ export function MatchupRow({
 
   return (
     <RingCard>
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-5 flex items-center justify-between">
         <span className="kicker">{BRACKET_LABEL[m.bracket]}</span>
-        {done ? <span className="kicker">Final</span> : <span className="kicker text-subtle">Live</span>}
+        {done ? <Ticket>Final</Ticket> : <Ticket>Live</Ticket>}
       </div>
       <div className="grid items-center gap-4 sm:grid-cols-[1fr_auto_1fr]">
         <Side
@@ -167,7 +167,7 @@ function Side({
       <div className="min-w-0 flex-1">
         <div className={cn("flex items-baseline gap-2", align === "right" && "sm:justify-end")}>
           <Seed n={fighter.seed} />
-          <FighterLink fighter={fighter} slug={slug} className="truncate font-display text-lg italic">
+          <FighterLink fighter={fighter} slug={slug} className="truncate font-display text-xl italic sm:text-2xl">
             {fighter.nickname}
           </FighterLink>
         </div>

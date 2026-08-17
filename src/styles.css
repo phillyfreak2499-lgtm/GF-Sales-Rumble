@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,650;1,9..144,500;1,9..144,600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,650;1,9..144,500;1,9..144,600;1,9..144,650&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap");
 @import "tailwindcss";
 
 @theme {
@@ -29,6 +29,11 @@
 
   --shadow-soft: 0 18px 40px -24px rgb(0 0 0 / 0.65);
   --shadow-ring: 0 0 0 1px rgb(255 255 255 / 0.08);
+  --shadow-poster: 0 24px 48px -28px rgb(0 0 0 / 0.8);
+
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --motion-quick: 150ms;
+  --motion-fast: 250ms;
 }
 
 @layer base {
@@ -42,13 +47,15 @@
     color: var(--color-fg);
     font-family: var(--font-sans);
     font-feature-settings: "ss01" on, "kern" on;
+    -webkit-font-smoothing: antialiased;
     min-height: 100%;
   }
 
   body {
     background-image:
-      radial-gradient(900px 420px at 50% -8%, rgb(255 255 255 / 0.045), transparent 58%),
-      linear-gradient(180deg, #121214 0%, var(--color-bg) 32%);
+      radial-gradient(1100px 520px at 50% -10%, rgb(255 255 255 / 0.055), transparent 58%),
+      radial-gradient(700px 280px at 12% 110%, rgb(197 194 182 / 0.05), transparent 62%),
+      linear-gradient(180deg, #121214 0%, var(--color-bg) 28%);
   }
 
   body::before {
@@ -57,7 +64,7 @@
     position: fixed;
     inset: 0;
     z-index: 0;
-    opacity: 0.045;
+    opacity: 0.055;
     background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   }
 
@@ -75,6 +82,16 @@
   button:not(:disabled),
   [role="button"]:not(:disabled) {
     cursor: pointer;
+  }
+
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
   }
 
   ::selection {
@@ -99,29 +116,45 @@
 @utility kicker {
   font-size: 0.6875rem;
   font-weight: 500;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
   color: var(--color-bone);
 }
 
 @utility rope-rule {
-  height: 7px;
+  height: 9px;
   background: repeating-linear-gradient(
     to bottom,
     transparent 0 1px,
-    rgb(197 194 182 / 0.38) 1px 2px,
+    rgb(197 194 182 / 0.55) 1px 2px,
     transparent 2px 3px
   );
+}
+
+@utility ticket-edge {
+  background-image: radial-gradient(circle at 0 50%, var(--color-bg) 6px, transparent 6.5px);
+  background-size: 12px 18px;
+  background-repeat: repeat-y;
+  background-position: left center;
 }
 
 @keyframes rise-in {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(10px);
   }
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
   }
 }
 
@@ -134,5 +167,11 @@
 }
 
 .rise {
-  animation: rise-in 400ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: rise-in 420ms var(--ease-out) both;
+}
+
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marquee 42s linear infinite;
 }

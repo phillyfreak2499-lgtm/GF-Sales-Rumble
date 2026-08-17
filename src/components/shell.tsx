@@ -1,6 +1,7 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { SignedIn, SignedOut, UserButton } from "@/lib/auth/gates";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
+import { Marquee } from "@/components/arena/ring";
 import { cn } from "@/lib/utils";
 
 const LINKS = [
@@ -13,13 +14,25 @@ const LINKS = [
   { to: "/desk", label: "Desk" },
 ] as const;
 
+const TICKER = [
+  "Period 10",
+  "Every store scores",
+  "No password",
+  "The commissioner locks the week",
+  "Green beats blue beats orange",
+  "Red is zero",
+  "All green is a sweep",
+  "Waterman Arch Supports",
+  "Main Event · Redemption · Royal Rumble",
+];
+
 export function Shell({ children }: { children: React.ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { isPending } = useCurrentUserState();
 
   return (
     <div className="min-h-dvh">
-      <header className="sticky top-0 z-40 bg-bg/88 backdrop-blur-md">
+      <header className="sticky top-0 z-40 bg-bg/90 backdrop-blur-md">
         <div className="mx-auto flex max-w-6xl items-center gap-4 px-4 py-3 sm:px-6">
           <Link to="/" className="flex shrink-0 items-center gap-2.5">
             <img
@@ -27,8 +40,9 @@ export function Shell({ children }: { children: React.ReactNode }) {
               alt="Waterman Arch Supports"
               className="h-8 w-auto max-w-[140px] object-contain object-left"
             />
-            <span className="hidden font-display text-xl italic leading-none tracking-tight text-fg sm:inline">
-              Rumble
+            <span className="hidden leading-none sm:block">
+              <span className="block text-[10px] uppercase tracking-[0.22em] text-bone">Waterman</span>
+              <span className="font-display text-2xl italic tracking-tight text-fg">Rumble</span>
             </span>
           </Link>
           <nav className="hidden min-w-0 flex-1 items-center gap-1 md:flex">
@@ -93,10 +107,10 @@ export function Shell({ children }: { children: React.ReactNode }) {
             );
           })}
         </nav>
-        <div className="rope-rule" />
+        <Marquee items={TICKER} />
       </header>
       <main className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 sm:py-10">{children}</main>
-      <footer className="mt-8 border-t border-line/80">
+      <footer className="mt-8">
         <div className="rope-rule" />
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-6 sm:px-6">
           <p className="text-xs uppercase tracking-[0.16em] text-subtle">

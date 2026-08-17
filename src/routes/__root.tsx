@@ -19,7 +19,7 @@ export const Route = createRootRoute({
       { title: APP_NAME },
       {
         name: "description",
-        content: "Waterman sales wrestling circuit — locker room, seeds, weekly bouts, live cards.",
+        content: "Waterman Period 10 Rumble — one locker for every store. The floor marks the scores. The commissioner locks the week.",
       },
       { name: "apple-mobile-web-app-title", content: APP_NAME },
       { name: "theme-color", content: "#0c0c0d" },

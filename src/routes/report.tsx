@@ -31,8 +31,18 @@ function ReportPage() {
 
       <section className="mt-10">
         <p className="kicker">This week’s write-ups</p>
-        <h2 className="mb-4 mt-2 font-display text-2xl italic">Week {liveWeek}</h2>
-        <BoutList board={board} week={liveWeek} />
+        <h2 className="mb-4 mt-2 font-display text-3xl italic">Week {liveWeek}</h2>
+        {board.matchups.some((m) => m.weekNumber === liveWeek) ? (
+          <BoutList board={board} week={liveWeek} />
+        ) : (
+          <RingCard className="relative overflow-hidden">
+            <img src="/locker.jpg" alt="" className="absolute inset-0 size-full object-cover opacity-25" />
+            <div className="relative">
+              <p className="font-display text-2xl italic">The first issue is still on the press.</p>
+              <p className="mt-2 text-sm text-muted">Open week 1 and the gazette writes itself.</p>
+            </div>
+          </RingCard>
+        )}
       </section>
 
       <div className="mt-12 space-y-6">

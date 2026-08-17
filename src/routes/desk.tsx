@@ -3,6 +3,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Shell } from "@/components/shell";
 import { ScorePad } from "@/components/board/score-pad";
+import { PageHead } from "@/components/arena/ring";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input, Label, Textarea } from "@/components/ui/input";
@@ -58,11 +59,12 @@ function DeskPage() {
 
   return (
     <Shell>
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <p className="text-xs uppercase tracking-[0.16em] text-subtle">Commissioner desk</p>
-          <h1 className="mt-1 font-display text-4xl">{circuit.name}</h1>
-          <div className="mt-2 flex flex-wrap gap-2">
+      <PageHead
+        kicker="Commissioner desk"
+        title={circuit.name}
+        lede="Add people, seed, lock the week, and close it. The floor still marks the scores without this password."
+        action={
+          <div className="flex flex-wrap gap-2">
             <Badge tone="bone">
               Week {circuit.currentWeek}/{circuit.weeks}
             </Badge>
@@ -71,8 +73,9 @@ function DeskPage() {
             <Badge>Join {circuit.joinCode}</Badge>
             <Badge>{board.fighters.length} on the book</Badge>
           </div>
-        </div>
-        <div className="flex flex-wrap gap-2">
+        }
+      />
+      <div className="mt-6 flex flex-wrap gap-2">
           <Button asChild variant="outline">
             <Link to="/new">New circuit</Link>
           </Button>
@@ -93,7 +96,6 @@ function DeskPage() {
             </Button>
           ) : null}
         </div>
-      </div>
 
       <form
         className="mt-6 flex max-w-lg flex-col gap-2 rounded-lg border border-line bg-surface p-4 sm:flex-row sm:items-end"

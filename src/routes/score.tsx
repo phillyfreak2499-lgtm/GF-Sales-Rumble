@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PageHead } from "@/components/arena/ring";
 import { useBoard } from "@/lib/use-board";
-import { SCORE_BLURB } from "@/lib/circuit/types";
 
 export const Route = createFileRoute("/score")({ component: ScorePage });
 
@@ -34,7 +33,7 @@ function ScorePage() {
       <PageHead
         kicker="Every store · no password"
         title="The scoresheet"
-        lede={`Anyone on any floor can mark cards. The commissioner locks the week when the numbers are final. ${SCORE_BLURB}`}
+        lede="Anyone on any floor can mark cards. No password. The commissioner locks the week when the numbers are final."
         action={
           <>
             <Badge tone="bone">

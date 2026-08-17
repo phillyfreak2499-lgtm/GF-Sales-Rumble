@@ -2,6 +2,15 @@
   "name": "waterman-rumble",
   "private": true,
   "description": "Waterman Period 10 sales wrestling circuit — shared locker, live scores, automatic brackets.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/phillyfreak2499-lgtm/GF-Sales-Rumble.git"
+  },
+  "homepage": "https://github.com/phillyfreak2499-lgtm/GF-Sales-Rumble",
+  "bugs": {
+    "url": "https://github.com/phillyfreak2499-lgtm/GF-Sales-Rumble/issues"
+  },
+  "license": "MIT",
   "sideEffects": false,
   "type": "module",
   "overrides": {

@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Shell } from "@/components/shell";
 import { BoutList } from "@/components/board/bout-card";
 import { Badge } from "@/components/ui/badge";
-import { PageHead } from "@/components/arena/ring";
+import { PageHead, RingCard } from "@/components/arena/ring";
 import { useBoard } from "@/lib/use-board";
 import { cn } from "@/lib/utils";
 
@@ -63,7 +63,14 @@ function BoutsPage() {
         ))}
       </div>
       <div className="mt-8">
-        <BoutList board={board} week={current} />
+        {count === 0 ? (
+          <RingCard>
+            <p className="font-display text-2xl italic">The aisle is empty.</p>
+            <p className="mt-2 text-sm text-muted">Write-ups print the moment week 1 is seeded and opened.</p>
+          </RingCard>
+        ) : (
+          <BoutList board={board} week={current} />
+        )}
       </div>
     </Shell>
   );

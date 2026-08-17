@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Shell } from "@/components/shell";
 import { MatchupRow } from "@/components/board/matchup-row";
 import { Badge } from "@/components/ui/badge";
-import { PageHead } from "@/components/arena/ring";
+import { PageHead, RingCard } from "@/components/arena/ring";
 import { useBoard } from "@/lib/use-board";
 import { cn } from "@/lib/utils";
 
@@ -48,7 +48,10 @@ function CardPage() {
       </div>
       <div className="mt-8 space-y-3">
         {items.length === 0 ? (
-          <p className="text-muted">No matchups this week yet. Open week 1 from the desk.</p>
+          <RingCard>
+            <p className="font-display text-2xl italic">No matchups this week yet.</p>
+            <p className="mt-2 text-sm text-muted">Open week 1 from the desk when the locker is ready.</p>
+          </RingCard>
         ) : (
           items.map((m) => <MatchupRow key={m.id} board={board} matchupId={m.id} />)
         )}
