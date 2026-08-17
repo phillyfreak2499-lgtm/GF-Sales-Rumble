@@ -57,6 +57,37 @@ Five metrics (rename them on the desk):
 
 This is the production path. Local `npm run dev` is a demo locker that lives only on that machine.
 
+### Render (this form)
+
+Connect the GitHub repo `phillyfreak2499-lgtm/GF-Sales-Rumble`.
+
+| Field | What to type |
+| --- | --- |
+| Name | `gf-rumble` |
+| Project | GF Rumble |
+| Environment | Production |
+| Language | Node |
+| Branch | `main` |
+| Region | Oregon (US West) |
+| Root Directory | leave blank |
+| Build Command | `npm run build` |
+| Start Command | `node .output/server/index.mjs` |
+| Instance | Free to try. **Starter ($7)** so it does not sleep during the 4-week rumble. |
+
+Add a **PostgreSQL** database on Render in Oregon first. Then add these environment variables:
+
+| Name | Value |
+| --- | --- |
+| `DATABASE_URL` | Internal Database URL from that Postgres |
+| `BETTER_AUTH_SECRET` | Click Generate, or paste a long random string |
+| `BETTER_AUTH_URL` | `https://gf-rumble.onrender.com` (your live URL, no trailing slash) |
+| `VITE_PUBLIC_HOSTNAME` | `gf-rumble.onrender.com` (host only) |
+| `NODE_VERSION` | `22` |
+| `NITRO_HOST` | `0.0.0.0` |
+
+Without `DATABASE_URL` the locker empties on every restart. Do not skip the database.
+
+
 1. Fork or clone this repo.
 2. Create a Postgres database (Neon is the usual match — any `postgres://` URL works).
 3. Import the repo on [Vercel](https://vercel.com). Framework: Vite. Build command: `npm run build`.
