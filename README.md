@@ -70,7 +70,7 @@ Connect the GitHub repo `phillyfreak2499-lgtm/GF-Sales-Rumble`.
 | Branch | `main` |
 | Region | Oregon (US West) |
 | Root Directory | leave blank |
-| Build Command | `npm run build` |
+| Build Command | `npm install && npm run build` |
 | Start Command | `node .output/server/index.mjs` |
 | Instance | Free to try. **Starter ($7)** so it does not sleep during the 4-week rumble. |
 
