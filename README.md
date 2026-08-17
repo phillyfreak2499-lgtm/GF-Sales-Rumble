@@ -84,6 +84,7 @@ Add a **PostgreSQL** database on Render in Oregon first. Then add these environm
 | `VITE_PUBLIC_HOSTNAME` | `thewatermangames.live` (host only) |
 | `NODE_VERSION` | `22` |
 | `NITRO_HOST` | `0.0.0.0` |
+| `NPM_CONFIG_PRODUCTION` | `false` |
 
 Without `DATABASE_URL` the locker empties on every restart. Do not skip the database.
 

@@ -1,7 +1,7 @@
 {
   "name": "waterman-rumble",
   "private": true,
-  "description": "Waterman Period 10 sales wrestling circuit — shared locker, live scores, automatic brackets.",
+  "description": "Waterman Period 10 sales wrestling circuit \u2014 shared locker, live scores, automatic brackets.",
   "repository": {
     "type": "git",
     "url": "https://github.com/phillyfreak2499-lgtm/GF-Sales-Rumble.git"
@@ -21,7 +21,7 @@
   },
   "scripts": {
     "dev": "vite dev --host 0.0.0.0 --port 8080",
-    "build": "vite build && npm run db:migrate",
+    "build": "npx vite build && npm run db:migrate",
     "start": "node .output/server/index.mjs",
     "db:migrate": "node scripts/migrate.mjs",
     "build:dev": "vite build --mode development",
@@ -81,7 +81,11 @@
     "tw-animate-css": "^1.3.4",
     "vaul": "^1.1.2",
     "zod": "^4.4.0",
-    "zustand": "^5.0.0"
+    "zustand": "^5.0.0",
+    "vite": "^8.2.0",
+    "nitro": "3.0.260610-beta",
+    "@vitejs/plugin-react": "^5.2.0",
+    "lightningcss": "^1.28.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.20.0",
@@ -89,19 +93,15 @@
     "@types/pg": "^8.11.10",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
-    "@vitejs/plugin-react": "^5.2.0",
     "eslint": "^9.20.0",
     "eslint-config-prettier": "^10.1.1",
     "eslint-plugin-prettier": "^5.2.6",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.20",
     "globals": "^15.15.0",
-    "lightningcss": "^1.28.0",
-    "nitro": "3.0.260610-beta",
     "playwright": "^1.62.0",
     "prettier": "^3.4.0",
     "typescript": "^5.7.0",
-    "typescript-eslint": "^8.56.1",
-    "vite": "^8.2.0"
+    "typescript-eslint": "^8.56.1"
   }
 }
