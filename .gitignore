@@ -1,0 +1,33 @@
+node_modules/
+dist/
+.vercel/
+.output/
+.nitro/
+.tanstack/
+.wrangler/
+coverage/
+*.log
+.env
+.env.*
+!.env.example
+.DS_Store
+Thumbs.db
+*.local
+
+# Local PGLite / sqlite dumps
+data/
+*.sqlite
+*.sqlite3
+
+# Sandbox / agent leftovers
+AGENTS.md
+.grok/
+vendor/
+artifacts/
+attachments/
+screenshots/
+
+# Editor
+.idea/
+.vscode/
+*.swp
