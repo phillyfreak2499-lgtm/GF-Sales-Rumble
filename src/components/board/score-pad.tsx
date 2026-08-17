@@ -61,7 +61,7 @@ export function ScorePad({
                     })
                   }
                   className={cn(
-                    "h-10 min-w-16 rounded-sm border px-3 text-xs uppercase tracking-[0.12em] transition-colors",
+                    "h-11 min-w-16 rounded-sm border px-3 text-xs uppercase tracking-[0.12em] transition-colors",
                     statusClass(s, statuses[i] === s),
                   )}
                 >

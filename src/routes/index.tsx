@@ -114,7 +114,7 @@ function Home() {
               <p className="kicker">Week {honorWeek} · Automatic</p>
               <h2 className="mt-2 font-display text-4xl italic sm:text-5xl">This week’s hardware</h2>
             </div>
-            <Link to="/honors" className="shrink-0 text-sm text-bone hover:text-fg">
+            <Link to="/honors" className="inline-flex min-h-11 shrink-0 items-center text-sm text-bone hover:text-fg">
               Full heat board
             </Link>
           </div>
@@ -161,7 +161,7 @@ function Home() {
           </div>
           <Link
             to={circuit.status === "setup" ? "/roster" : "/bouts"}
-            className="shrink-0 text-sm text-bone hover:text-fg"
+            className="inline-flex min-h-11 shrink-0 items-center text-sm text-bone hover:text-fg"
           >
             {circuit.status === "setup" ? "Full locker" : "All write-ups"}
           </Link>
@@ -211,7 +211,7 @@ function Home() {
                       to="/fighter/$id"
                       params={{ id: f.id }}
                       search={{ slug: circuit.slug }}
-                      className="min-w-0 flex-1 truncate font-display text-lg italic"
+                      className="flex min-h-11 min-w-0 flex-1 items-center truncate font-display text-lg italic"
                     >
                       {f.nickname}
                       <span className="font-sans not-italic text-muted">
@@ -233,7 +233,7 @@ function Home() {
             <p className="kicker">The Floor Gazette</p>
             <h2 className="mt-3 font-display text-3xl italic leading-tight">{latest.headline}</h2>
             <p className="mt-3 line-clamp-6 whitespace-pre-line text-sm leading-relaxed text-muted">{latest.body}</p>
-            <Link to="/report" className="mt-5 inline-block text-sm text-bone hover:text-fg">
+            <Link to="/report" className="mt-5 inline-flex min-h-11 items-center text-sm text-bone hover:text-fg">
               Read the gazette
             </Link>
           </RingCard>
@@ -260,7 +260,7 @@ function Home() {
               <p className="kicker">Crowd temperature</p>
               <h2 className="mt-2 font-display text-4xl italic">Hottest on the card</h2>
             </div>
-            <Link to="/honors" className="shrink-0 text-sm text-bone hover:text-fg">
+            <Link to="/honors" className="inline-flex min-h-11 shrink-0 items-center text-sm text-bone hover:text-fg">
               Heat board
             </Link>
           </div>

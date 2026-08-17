@@ -103,7 +103,7 @@ function RoomPage() {
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <button
             type="button"
-            className="kicker text-subtle hover:text-fg"
+            className="inline-flex min-h-11 items-center text-xs uppercase tracking-[0.16em] text-subtle hover:text-fg"
             onClick={() => {
               setOpen(null);
             }}
@@ -133,7 +133,7 @@ function RoomPage() {
 
   return (
     <Shell>
-      <Link to="/roster" className="kicker text-subtle hover:text-fg">
+      <Link to="/roster" className="inline-flex min-h-11 items-center text-xs uppercase tracking-[0.16em] text-subtle hover:text-fg">
         Hallway
       </Link>
       <div className="mt-3 flex flex-wrap items-end justify-between gap-3">

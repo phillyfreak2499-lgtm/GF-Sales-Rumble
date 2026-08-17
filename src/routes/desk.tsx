@@ -171,7 +171,7 @@ function DeskPage() {
             key={t}
             type="button"
             onClick={() => setTab(t)}
-            className={`h-10 rounded-sm border px-4 text-sm capitalize ${
+            className={`min-h-11 rounded-sm border px-4 text-sm capitalize ${
               tab === t ? "border-bone bg-bone/10" : "border-line text-muted"
             }`}
           >

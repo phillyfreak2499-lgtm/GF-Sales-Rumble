@@ -211,12 +211,12 @@ function HowPage() {
         action={<Ticket>Four weeks · three floors</Ticket>}
       />
 
-      <nav aria-label="Guide sections" className="mt-8 flex gap-2 overflow-x-auto pb-1">
+      <nav aria-label="Guide sections" className="mt-8 flex gap-2 overflow-x-auto pb-1 [-webkit-overflow-scrolling:touch]">
         {STEPS.map((s) => (
           <a
             key={s.id}
             href={`#${s.id}`}
-            className="shrink-0 rounded-sm border border-line bg-surface px-3 py-2 text-sm text-muted hover:text-fg"
+            className="inline-flex min-h-11 shrink-0 items-center rounded-sm border border-line bg-surface px-3 text-sm text-muted hover:text-fg"
           >
             <span className="mr-2 text-[11px] uppercase tracking-[0.16em] text-bone">{s.n}</span>
             {s.label}
