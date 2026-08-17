@@ -2,12 +2,14 @@ import { DEFAULT_METRICS } from "@/lib/circuit/types";
 import { DEMO_ROSTER } from "@/lib/circuit/seed-roster";
 import { DEMO_BIOS } from "@/lib/circuit/demo-bios";
 import { generatePersona } from "@/lib/circuit/copy";
+import { DEMO_WALKOUTS, STORE_NAMES } from "@/lib/circuit/crowd";
 import { nid } from "@/lib/utils";
+import { mintPasscode } from "@/lib/circuit/passcode";
 import type { Sql } from "@/lib/db";
 
 export const DEMO_SLUG = "p10";
 export const DEMO_JOIN = "CLINCH-P10";
-export const DEMO_WEEKS = 5;
+export const DEMO_WEEKS = 4;
 export const DEMO_ROSTER_SIZE = DEMO_ROSTER.length;
 
 async function rosterMatches(sql: Sql, circuitId: string) {
@@ -16,7 +18,7 @@ async function rosterMatches(sql: Sql, circuitId: string) {
   `;
   if (rows.length !== DEMO_ROSTER_SIZE) return false;
   const names = new Set(rows.map((r) => r.last_name));
-  return names.has("Einsohn") && names.has("Oden") && names.has("Rodriquez");
+  return names.has("Einsohn") && names.has("Oden") && names.has("Rodriquez") && !names.has("Hudson");
 }
 
 export async function ensureDemoCircuit(sql: Sql): Promise<void> {
@@ -65,10 +67,12 @@ async function insertDemo(sql: Sql) {
     `;
   }
 
+  const used = new Set<string>();
   for (let i = 0; i < DEMO_ROSTER.length; i += 1) {
     const r = DEMO_ROSTER[i];
     const id = nid("f");
-    const code = `${r.nickname.replace(/[^A-Za-z]/g, "").slice(0, 4).toUpperCase()}${String(i + 1).padStart(2, "0")}`;
+    const code = mintPasscode(used);
+    used.add(code);
     const bio = DEMO_BIOS[r.nickname] ?? { hometown: "", funFact: "" };
     const persona = generatePersona({
       firstName: r.firstName,
@@ -80,13 +84,14 @@ async function insertDemo(sql: Sql) {
     await sql`
       insert into fighters (
         id, circuit_id, user_id, first_name, last_name, nickname, hype_line, backstory,
-        hometown, fun_fact, seed, prior_points, prior_blues, prior_reviews, claim_code, active
+        hometown, fun_fact, seed, prior_points, prior_blues, prior_reviews, claim_code, active, photo_url, store, walkout
       ) values (
         ${id}, ${circuitId}, ${null}, ${r.firstName}, ${r.lastName}, ${r.nickname},
         ${r.hypeLine || persona.hypeLine}, ${r.backstory || persona.backstory},
         ${bio.hometown}, ${bio.funFact},
         ${null}, ${r.priorPoints}, ${r.priorBlues},
-        ${r.priorReviews}, ${code}, ${true}
+        ${r.priorReviews}, ${code}, ${true}, ${""},
+        ${STORE_NAMES[i % STORE_NAMES.length]}, ${DEMO_WALKOUTS[i % DEMO_WALKOUTS.length]}
       )
     `;
   }

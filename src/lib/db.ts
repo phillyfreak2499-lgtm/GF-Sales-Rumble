@@ -1,4 +1,4 @@
-/** Schema is applied from `migrations/*.sql` (auth, circuit, wrestler bios). */
+/** Schema is applied from `migrations/*.sql` (auth, circuit, bios, photos, belt, ticker, stickers, jobs, departed, crowd). */
 export type DbSource = "neon" | "pglite";
 
 // An empty/whitespace DATABASE_URL (an easy misconfig in deploy UIs) must mean

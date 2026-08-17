@@ -11,6 +11,7 @@ export function ScorePad({
   initialStatuses,
   initialReviews,
   initialNotes,
+  trainingBonus = 0,
   disabled,
   pending,
   onSubmit,
@@ -19,6 +20,7 @@ export function ScorePad({
   initialStatuses?: MetricStatus[];
   initialReviews?: number;
   initialNotes?: string;
+  trainingBonus?: 0 | 1;
   disabled?: boolean;
   pending?: boolean;
   onSubmit: (d: { statuses: MetricStatus[]; reviews: number; notes: string }) => void;
@@ -28,7 +30,10 @@ export function ScorePad({
   );
   const [reviews, setReviews] = useState(initialReviews ?? 0);
   const [notes, setNotes] = useState(initialNotes ?? "");
-  const card = useMemo(() => scorecard(statuses, reviews), [statuses, reviews]);
+  const card = useMemo(
+    () => scorecard(statuses, reviews, trainingBonus),
+    [statuses, reviews, trainingBonus],
+  );
 
   return (
     <form
@@ -107,6 +112,7 @@ export function ScorePad({
           <p className="mt-1 text-sm text-muted">
             {card.greens} green · {card.blues} blue · {card.oranges} orange
             {card.bonus ? ` · +${card.bonus} extra` : ""}
+            {card.trainingBonus ? " · academy +1" : ""}
             {card.sweep ? " · sweep" : ""}
           </p>
         </div>

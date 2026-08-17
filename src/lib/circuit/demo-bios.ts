@@ -136,10 +136,6 @@ export const DEMO_BIOS: Record<string, { hometown: string; funFact: string }> = 
     hometown: "Farmers Branch",
     funFact: "Books the return before the guest has their keys out.",
   },
-  "The Hudson": {
-    hometown: "Sunnyvale",
-    funFact: "If a guest is wandering, they are already his.",
-  },
   "Oden Enough": {
     hometown: "Seagoville",
     funFact: "Keeps the pitch short on purpose. The chair does the rest.",

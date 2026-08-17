@@ -180,7 +180,7 @@ export const DEMO_ROSTER: SeedFighter[] = [
     firstName: "Ashley",
     lastName: "Long",
     nickname: "Long Game",
-    hypeLine: "Week five was always the plan.",
+    hypeLine: "Week four was always the plan.",
     backstory:
       "Ashley does not chase the first yes. She builds the file, then cashes it when the guest is ready — which is sooner than they think.",
     priorPoints: 0,
@@ -381,17 +381,6 @@ export const DEMO_ROSTER: SeedFighter[] = [
     hypeLine: "She is already on the next appointment while you are still on the first no.",
     backstory:
       "Kiara books the return before the guest has their keys out. The calendar is her favorite tool on the wall.",
-    priorPoints: 0,
-    priorBlues: 0,
-    priorReviews: 0,
-  },
-  {
-    firstName: "Matthew",
-    lastName: "Hudson",
-    nickname: "The Hudson",
-    hypeLine: "Wide as a river. Hard to get around.",
-    backstory:
-      "Matthew covers ground. If a guest is wandering, they are his. If a sample is missing, he already moved it.",
     priorPoints: 0,
     priorBlues: 0,
     priorReviews: 0,

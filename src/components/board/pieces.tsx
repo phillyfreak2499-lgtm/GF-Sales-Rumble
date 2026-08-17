@@ -1,10 +1,29 @@
 import { Link } from "@tanstack/react-router";
 import { Badge } from "@/components/ui/badge";
-import { BRACKET_LABEL, type BracketId, type Fighter, type MetricStatus, type Scorecard } from "@/lib/circuit/types";
+import { FLOOR, type Fighter, type FloorId, type MetricStatus, type Scorecard } from "@/lib/circuit/types";
 import { initials } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 
-export function MonoMark({ first, last, className }: { first: string; last: string; className?: string }) {
+export function MonoMark({
+  first,
+  last,
+  photo,
+  className,
+}: {
+  first: string;
+  last: string;
+  photo?: string;
+  className?: string;
+}) {
+  if (photo) {
+    return (
+      <img
+        src={photo}
+        alt=""
+        className={cn("size-11 shrink-0 rounded-sm object-cover", className)}
+      />
+    );
+  }
   return (
     <span
       className={cn(
@@ -32,16 +51,19 @@ export function Points({ card }: { card: Scorecard | null | undefined }) {
       <span className="font-display text-lg italic text-fg">{card.points}</span>
       <span className="text-subtle">pts</span>
       {card.sweep ? <span className="text-[11px] uppercase tracking-[0.12em] text-sage">Sweep</span> : null}
+      {card.trainingBonus ? (
+        <span className="text-[11px] uppercase tracking-[0.12em] text-steel">Academy</span>
+      ) : null}
     </span>
   );
 }
 
 export function statusClass(s: MetricStatus, filled: boolean) {
   if (!filled) return "border-line text-subtle hover:text-fg";
-  if (s === "green") return "border-sage bg-sage/20 text-sage";
-  if (s === "blue") return "border-steel bg-steel/20 text-steel";
-  if (s === "orange") return "border-amber bg-amber/20 text-amber";
-  return "border-rose bg-rose/20 text-rose";
+  if (s === "green") return "border-sage bg-sage/30 text-sage";
+  if (s === "blue") return "border-steel bg-steel/30 text-steel";
+  if (s === "orange") return "border-amber bg-amber/30 text-amber";
+  return "border-rose bg-rose/30 text-rose";
 }
 
 export function MetricPips({ statuses }: { statuses: MetricStatus[] }) {
@@ -63,11 +85,15 @@ export function MetricPips({ statuses }: { statuses: MetricStatus[] }) {
   );
 }
 
-export function BracketChip({ id }: { id: BracketId | "out" | "champ" | "unassigned" }) {
-  if (id === "champ") return <Badge tone="bone">Champion</Badge>;
-  if (id === "out") return <Badge tone="rose">Out</Badge>;
-  if (id === "unassigned") return <Badge>Unseeded</Badge>;
-  return <Badge tone={id === "main" ? "bone" : id === "redemption" ? "steel" : "default"}>{BRACKET_LABEL[id]}</Badge>;
+export function BracketChip({ id, compact }: { id: FloorId; compact?: boolean }) {
+  const floor = FLOOR[id];
+  const tone = id === "champ" || id === "main" ? "amber" : id === "redemption" ? "steel" : id === "rumble" || id === "out" ? "rose" : "default";
+  const label = compact && floor.n ? floor.short : floor.n ? `${floor.short} · ${floor.name}` : floor.name;
+  return <Badge tone={tone}>{label}</Badge>;
+}
+
+export function FloorLine({ id }: { id: FloorId }) {
+  return <p className="text-sm leading-relaxed text-muted">{FLOOR[id].stillIn}</p>;
 }
 
 export function FighterLink({

@@ -5,6 +5,8 @@ import { MatchupRow } from "@/components/board/matchup-row";
 import { Badge } from "@/components/ui/badge";
 import { PageHead, RingCard } from "@/components/arena/ring";
 import { useBoard } from "@/lib/use-board";
+import { BRACKETS, FLOOR } from "@/lib/circuit/types";
+import { weekCardProgress } from "@/lib/circuit/week-progress";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/card")({ component: CardPage });
@@ -22,13 +24,18 @@ function CardPage() {
   const current = week ?? board.circuit.currentWeek;
   const items = board.matchups.filter((m) => m.weekNumber === current);
   const w = board.weeks.find((x) => x.weekNumber === current);
+  const byFloor = BRACKETS.map((id) => ({
+    id,
+    floor: FLOOR[id],
+    bouts: items.filter((m) => m.bracket === id),
+  })).filter((g) => g.bouts.length > 0);
 
   return (
     <Shell>
       <PageHead
-        kicker="Brackets"
+        kicker="Three floors"
         title="The card"
-        lede="Main Event stays. A loss drops you one floor. Royal Rumble is everyone left, scored as a free-for-all."
+        lede="Each week the floor reseeds: most points is seed 1, then stars, then socks if needed. Highest gets the bye. Highest wrestles lowest. Scores show as they land."
         action={w ? <Badge>{w.status}</Badge> : null}
       />
       <div className="mt-6 flex flex-wrap gap-2">
@@ -46,14 +53,44 @@ function CardPage() {
           </button>
         ))}
       </div>
-      <div className="mt-8 space-y-3">
+      {(() => {
+        const p = weekCardProgress(current, board.matchups, board.fighters, board.scores);
+        if (!p.of) return null;
+        return (
+          <p className="mt-4 text-sm text-muted">
+            <span className="font-display text-xl italic tabular text-fg">{p.in}</span>
+            {" / "}
+            {p.of} cards in this week
+            {p.ready ? " · last card closed the week" : " · last card books the next week"}
+          </p>
+        );
+      })()}
+      <div className="mt-8 space-y-10">
         {items.length === 0 ? (
           <RingCard>
             <p className="font-display text-2xl italic">No matchups this week yet.</p>
             <p className="mt-2 text-sm text-muted">Open week 1 from the desk when the locker is ready.</p>
           </RingCard>
         ) : (
-          items.map((m) => <MatchupRow key={m.id} board={board} matchupId={m.id} />)
+          byFloor.map((g) => (
+            <section key={g.id}>
+              <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
+                <div>
+                  <p className={cn("kicker", g.id === "main" ? "text-amber" : g.id === "redemption" ? "text-steel" : "text-rose")}>{g.floor.short}</p>
+                  <h2 className="mt-1 font-display text-3xl italic">{g.floor.name}</h2>
+                  <p className="mt-1 text-sm text-muted">Still fighting for {g.floor.fightFor}.</p>
+                </div>
+                <Badge tone={g.id === "main" ? "bone" : g.id === "redemption" ? "steel" : "default"}>
+                  {g.bouts.reduce((n, m) => n + m.fighterIds.length, 0)} on this floor
+                </Badge>
+              </div>
+              <div className="space-y-3">
+                {g.bouts.map((m) => (
+                  <MatchupRow key={m.id} board={board} matchupId={m.id} />
+                ))}
+              </div>
+            </section>
+          ))
         )}
       </div>
     </Shell>

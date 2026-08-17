@@ -2,6 +2,7 @@ import { createRootRoute, HeadContent, Outlet, Scripts } from "@tanstack/react-r
 import { AuthProvider } from "@/lib/auth/provider";
 import { PreviewHostBridge } from "@/components/preview-host-bridge";
 import { QueryProvider } from "@/components/query-provider";
+import { ThemeMount } from "@/components/theme-mount";
 import { Toaster } from "sonner";
 import appCss from "../styles.css?url";
 
@@ -19,7 +20,7 @@ export const Route = createRootRoute({
       { title: APP_NAME },
       {
         name: "description",
-        content: "Waterman Period 10 Rumble — one locker for every store. The floor marks the scores. The commissioner locks the week.",
+        content: "Waterman Period 10 Rumble — one locker room for every store. The floor marks the scores. The commissioner locks the week.",
       },
       { name: "apple-mobile-web-app-title", content: APP_NAME },
       { name: "theme-color", content: "#0c0c0d" },
@@ -45,6 +46,7 @@ export const Route = createRootRoute({
         <PreviewHostBridge />
         <AuthProvider>
           <QueryProvider>
+            <ThemeMount />
             <Outlet />
             <Toaster
               theme="dark"

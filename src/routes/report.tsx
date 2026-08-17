@@ -3,12 +3,15 @@ import { Shell } from "@/components/shell";
 import { BoutList } from "@/components/board/bout-card";
 import { Badge } from "@/components/ui/badge";
 import { PageHead, RingCard } from "@/components/arena/ring";
+import { AnnouncerPlate, StyleRail } from "@/components/arena/announcer";
+import { useAnnounceStyle } from "@/lib/use-announce";
 import { useBoard } from "@/lib/use-board";
 
 export const Route = createFileRoute("/report")({ component: ReportPage });
 
 function ReportPage() {
   const { data: board, isPending } = useBoard();
+  const { style, choose, meta } = useAnnounceStyle();
   if (isPending || !board) {
     return (
       <Shell>
@@ -25,15 +28,22 @@ function ReportPage() {
     <Shell>
       <PageHead
         kicker="The Floor Gazette"
-        title="From the aisle"
-        lede="Preview when a week opens. Recap when it closes. Each bout gets a paragraph — who is wrestling, the record, the hometown, the one fact that follows them."
+        title="This week’s paper"
+        lede="Previews before the week. Recaps after it locks. Flip the style — same facts, different voice."
       />
+
+      <div className="mt-8">
+        <AnnouncerPlate compact line={meta.intro} />
+      </div>
+      <div className="mt-8">
+        <StyleRail value={style} onChange={choose} />
+      </div>
 
       <section className="mt-10">
         <p className="kicker">This week’s write-ups</p>
         <h2 className="mb-4 mt-2 font-display text-3xl italic">Week {liveWeek}</h2>
         {board.matchups.some((m) => m.weekNumber === liveWeek) ? (
-          <BoutList board={board} week={liveWeek} />
+          <BoutList board={board} week={liveWeek} style={style} />
         ) : (
           <RingCard className="relative overflow-hidden">
             <img src="/locker.jpg" alt="" className="absolute inset-0 size-full object-cover opacity-25" />
@@ -56,6 +66,9 @@ function ReportPage() {
             </div>
             <h2 className="mt-3 font-display text-2xl italic leading-tight sm:text-3xl">{g.headline}</h2>
             <div className="mt-4 whitespace-pre-line text-sm leading-relaxed text-muted">{g.body}</div>
+            <p className="mt-4 text-[11px] uppercase tracking-[0.16em] text-subtle">
+              Floor Gazette · {g.kind}
+            </p>
           </RingCard>
         ))}
       </div>

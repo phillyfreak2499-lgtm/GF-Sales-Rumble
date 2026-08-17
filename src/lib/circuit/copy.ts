@@ -1,4 +1,4 @@
-import type { BracketId, Fighter, Matchup, Placement, Score } from "./types";
+import type { Fighter, Matchup, Placement, Score } from "./types";
 import { BRACKET_LABEL } from "./types";
 import { cardFor, compareCards } from "./engine";
 
@@ -69,7 +69,7 @@ const HYPE = [
   (n: string) => `Don’t blink on the follow-up. ${n} already booked the pin.`,
   (n: string) => `${n} didn’t come down the aisle to split the ticket.`,
   (n: string) => `The bell rings. The guest sits. ${n} is still talking.`,
-  (n: string) => `Smile, handshake, close. That is the whole match.`,
+  (_n: string) => `Smile, handshake, close. That is the whole match.`,
   (n: string) => `${n} treats every walk-in like a title defense.`,
 ];
 

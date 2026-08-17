@@ -6,10 +6,11 @@ import type { BoardPayload } from "@/lib/server/circuit";
 import { submitScoresBatch } from "@/lib/server/circuit";
 import { useBoardMutation } from "@/lib/use-board";
 import { scorecard } from "@/lib/circuit/engine";
-import { SCORE_BLURB, STATUS_LABEL, STATUS_ORDER, type MetricStatus } from "@/lib/circuit/types";
+import { awardedBonus } from "@/lib/circuit/training";
+import { SCORE_BLURB, STATUS_LABEL, STATUS_ORDER, weekAcceptsScores, type MetricStatus } from "@/lib/circuit/types";
 import { statusClass } from "./pieces";
 import { cn } from "@/lib/utils";
-import { Seed } from "./pieces";
+import { MonoMark, Seed } from "./pieces";
 
 const CYCLE: MetricStatus[] = [...STATUS_ORDER];
 
@@ -74,7 +75,7 @@ function ReviewBtns({
   );
 }
 
-export function ScoreSheet({ board }: { board: BoardPayload }) {
+export function ScoreSheet({ board, pin }: { board: BoardPayload; pin?: string }) {
   const week = board.circuit.currentWeek;
   const weekState = board.weeks.find((w) => w.weekNumber === week);
   const ids = [
@@ -110,7 +111,7 @@ export function ScoreSheet({ board }: { board: BoardPayload }) {
   const save = useBoardMutation((d: Parameters<typeof submitScoresBatch>[0]["data"]) =>
     submitScoresBatch({ data: d }),
   );
-  const open = weekState?.status === "open";
+  const open = weekAcceptsScores(weekState?.status ?? "");
   const locked = weekState?.status === "locked";
 
   function setStatus(id: string, i: number, s: MetricStatus) {
@@ -134,6 +135,7 @@ export function ScoreSheet({ board }: { board: BoardPayload }) {
       {
         slug: board.circuit.slug,
         weekNumber: week,
+        pin,
         rows: Object.entries(rows).map(([fighterId, r]) => ({
           fighterId,
           statuses: r.statuses,
@@ -141,7 +143,12 @@ export function ScoreSheet({ board }: { board: BoardPayload }) {
         })),
       },
       {
-        onSuccess: () => toast.success("Sheet saved."),
+        onSuccess: (next) =>
+          toast.success(
+            next.circuit.currentWeek !== week
+              ? `Sheet saved. Week ${week} closed. Week ${next.circuit.currentWeek} is booked.`
+              : "Sheet saved.",
+          ),
         onError: (e) => toast.error(e.message),
       },
     );
@@ -164,7 +171,8 @@ export function ScoreSheet({ board }: { board: BoardPayload }) {
           <Ticket>Week {week} · official card</Ticket>
           <h2 className="mt-3 font-display text-4xl italic">Mark the cards</h2>
           <p className="mt-2 max-w-2xl text-sm text-muted">
-            Tap a metric to cycle Red → Orange → Blue → Green. No password. {SCORE_BLURB}
+            Tap a metric to cycle Red → Orange → Blue → Green. Commissioner override is on. Save as
+            often as you want until the week is locked. {SCORE_BLURB}
           </p>
           <ul className="mt-3 flex flex-wrap gap-2 text-[11px] uppercase tracking-[0.14em]">
             <li className="border border-sage/40 bg-sage/15 px-2 py-1 text-sage">Green 3</li>
@@ -192,18 +200,30 @@ export function ScoreSheet({ board }: { board: BoardPayload }) {
             statuses: board.metrics.map(() => "red" as MetricStatus),
             reviews: 0,
           };
-          const card = scorecard(row.statuses, row.reviews);
+          const card = scorecard(
+            row.statuses,
+            row.reviews,
+            awardedBonus(board.academy, f.id, board.circuit.currentWeek),
+          );
           return (
             <RingCard key={f.id}>
-              <div className="flex items-baseline justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="truncate font-display text-2xl italic leading-tight">
-                    <Seed n={f.seed} /> {f.nickname}
-                  </p>
-                  <p className="truncate text-xs text-muted">
-                    {f.firstName} {f.lastName}
-                    {f.hometown ? ` · ${f.hometown}` : ""}
-                  </p>
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex min-w-0 items-center gap-3">
+                  <MonoMark
+                    first={f.firstName}
+                    last={f.lastName}
+                    photo={f.photoUrl}
+                    className="size-12 text-sm"
+                  />
+                  <div className="min-w-0">
+                    <p className="truncate font-display text-2xl italic leading-tight">
+                      <Seed n={f.seed} /> {f.nickname}
+                    </p>
+                    <p className="truncate text-xs text-muted">
+                      {f.firstName} {f.lastName}
+                      {f.hometown ? ` · ${f.hometown}` : ""}
+                    </p>
+                  </div>
                 </div>
                 <p className="tabular font-display text-2xl italic">
                   {card.points}
@@ -261,11 +281,21 @@ export function ScoreSheet({ board }: { board: BoardPayload }) {
                 statuses: board.metrics.map(() => "red" as MetricStatus),
                 reviews: 0,
               };
-              const card = scorecard(row.statuses, row.reviews);
+              const card = scorecard(
+                row.statuses,
+                row.reviews,
+                awardedBonus(board.academy, f.id, board.circuit.currentWeek),
+              );
               return (
                 <tr key={f.id} className="border-t border-line">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
+                      <MonoMark
+                        first={f.firstName}
+                        last={f.lastName}
+                        photo={f.photoUrl}
+                        className="size-10 text-xs"
+                      />
                       <Seed n={f.seed} />
                       <div>
                         <p className="font-display text-lg italic leading-tight">{f.nickname}</p>
@@ -308,7 +338,7 @@ export function ScoreSheet({ board }: { board: BoardPayload }) {
       {locked ? (
         <p className="text-sm text-amber">Scores are locked. The commissioner can unlock them from the desk.</p>
       ) : !open ? (
-        <p className="text-sm text-subtle">This week is not open for scoring. Open week 1 from the desk when the locker is ready.</p>
+        <p className="text-sm text-subtle">This week is closed. Open the next week from the desk.</p>
       ) : null}
     </div>
   );

@@ -15,7 +15,11 @@ export function normalizeStatus(s: string | undefined | null): MetricStatus {
   return "red";
 }
 
-export function scorecard(statuses: MetricStatus[], reviews: number): Scorecard {
+export function scorecard(
+  statuses: MetricStatus[],
+  reviews: number,
+  trainingBonus: number = 0,
+): Scorecard {
   const greens = statuses.filter((s) => s === "green").length;
   const blues = statuses.filter((s) => s === "blue").length;
   const oranges = statuses.filter((s) => s === "orange").length;
@@ -24,14 +28,16 @@ export function scorecard(statuses: MetricStatus[], reviews: number): Scorecard 
   const bonus = Math.max(0, greens - 1);
   const base = statuses.reduce((sum, s) => sum + (STATUS_POINTS[s] ?? 0), 0);
   const sweep = statuses.length > 0 && greens === statuses.length;
+  const train: 0 | 1 = trainingBonus > 0 ? 1 : 0;
   return {
-    points: base + bonus + rev,
+    points: base + bonus + rev + train,
     greens,
     blues,
     oranges,
     reds,
     reviews: rev,
     bonus,
+    trainingBonus: train,
     sweep,
   };
 }
@@ -68,6 +74,26 @@ export function assignSeeds(fighters: Fighter[]): Fighter[] {
   return seedOrder(fighters).map((f, i) => ({ ...f, seed: i + 1 }));
 }
 
+export type RankKey = {
+  points: number;
+  stars: number;
+  socks: number;
+  seed: number;
+};
+
+export function compareRank(a: RankKey, b: RankKey) {
+  if (b.points !== a.points) return b.points - a.points;
+  if (b.stars !== a.stars) return b.stars - a.stars;
+  if (b.socks !== a.socks) return b.socks - a.socks;
+  return a.seed - b.seed;
+}
+
+/** Seed 1 is most points in this room. Then stars, then socks sold. */
+export function reseedIds(ids: string[], keyOf: (id: string) => RankKey) {
+  const sorted = [...ids].sort((a, b) => compareRank(keyOf(a), keyOf(b)));
+  return new Map(sorted.map((id, i) => [id, i + 1]));
+}
+
 export function pairBracket(
   fighterIds: string[],
   seedById: Map<string, number>,
@@ -78,7 +104,7 @@ export function pairBracket(
     (a, b) => (seedById.get(a) ?? 999) - (seedById.get(b) ?? 999),
   );
   if (sorted.length === 0) return [];
-  if (asRumble || bracket === "rumble") {
+  if (asRumble) {
     if (sorted.length === 1) {
       return [{ kind: "bye", fighterIds: sorted, bracket }];
     }
@@ -120,11 +146,13 @@ export function cardFor(
   scores: Score[],
   metricCount: number,
   seed: number,
+  trainingBonus: number = 0,
 ): Scorecard & { seed: number } {
   const s = scores.find((x) => x.fighterId === fighterId);
+  const train = (s?.trainingBonus ?? 0) > 0 || trainingBonus > 0 ? 1 : 0;
   const base = s
-    ? scorecard(s.statuses, s.reviews)
-    : scorecard(emptyStatuses(metricCount), 0);
+    ? scorecard(s.statuses, s.reviews, train)
+    : scorecard(emptyStatuses(metricCount), 0, train);
   return { ...base, seed };
 }
 
@@ -134,11 +162,12 @@ export function decideWinner(
   scores: Score[],
   seedById: Map<string, number>,
   metricCount: number,
+  trainingBonus?: Map<string, number>,
 ): { winnerId: string | null; ranked: string[] } {
   const ranked = [...fighterIds].sort((a, b) =>
     compareCards(
-      cardFor(a, scores, metricCount, seedById.get(a) ?? 999),
-      cardFor(b, scores, metricCount, seedById.get(b) ?? 999),
+      cardFor(a, scores, metricCount, seedById.get(a) ?? 999, trainingBonus?.get(a) ?? 0),
+      cardFor(b, scores, metricCount, seedById.get(b) ?? 999, trainingBonus?.get(b) ?? 0),
     ),
   );
   if (kind === "bye") return { winnerId: fighterIds[0] ?? null, ranked };
@@ -165,6 +194,7 @@ export function resolveWeek(opts: {
   seedById: Map<string, number>;
   metricCount: number;
   isFinalWeek: boolean;
+  trainingBonus?: Map<string, number>;
 }): ResolvedFighter[] {
   const out: ResolvedFighter[] = [];
   const byBracket = new Map<BracketId, Matchup[]>();
@@ -185,14 +215,15 @@ export function resolveWeek(opts: {
         opts.scores,
         opts.seedById,
         opts.metricCount,
+        opts.trainingBonus,
       );
       for (const id of ranked) allIn.push(id);
     }
     const unique = [...new Set(allIn)];
     unique.sort((a, b) =>
       compareCards(
-        cardFor(a, opts.scores, opts.metricCount, opts.seedById.get(a) ?? 999),
-        cardFor(b, opts.scores, opts.metricCount, opts.seedById.get(b) ?? 999),
+        cardFor(a, opts.scores, opts.metricCount, opts.seedById.get(a) ?? 999, opts.trainingBonus?.get(a) ?? 0),
+        cardFor(b, opts.scores, opts.metricCount, opts.seedById.get(b) ?? 999, opts.trainingBonus?.get(b) ?? 0),
       ),
     );
     unique.forEach((id, i) => ranks.set(id, i + 1));
@@ -204,6 +235,7 @@ export function resolveWeek(opts: {
         opts.scores,
         opts.seedById,
         opts.metricCount,
+        opts.trainingBonus,
       );
       if (m.kind === "rumble") {
         ranked.forEach((id, i) => {

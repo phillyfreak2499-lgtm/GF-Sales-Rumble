@@ -1,9 +1,9 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { Shell } from "@/components/shell";
-import { BracketChip, MonoMark } from "@/components/board/pieces";
-import { FighterPoster, PageHead } from "@/components/arena/ring";
-import { useBoard, standingOf } from "@/lib/use-board";
-import { formatRecord, recordOf } from "@/lib/circuit/copy";
+import { PageHead } from "@/components/arena/ring";
+import { StoreDoor } from "@/components/board/store-door";
+import { onTheBook, useBoard } from "@/lib/use-board";
+import { STORES, emptyRoom, storeSlugOf } from "@/lib/circuit/stores";
 
 export const Route = createFileRoute("/roster")({ component: RosterPage });
 
@@ -16,46 +16,40 @@ function RosterPage() {
       </Shell>
     );
   }
+  const live = onTheBook(board.fighters);
+  const rooms = board.rooms ?? STORES.map((s) => emptyRoom(s.slug));
+  const unaffiliated = live.filter((f) => !storeSlugOf(f.store));
 
   return (
     <Shell>
       <PageHead
-        kicker="The locker room"
-        title="Signed and ready"
-        lede={`${board.fighters.length} wrestlers on the book. Seeds, hometowns, and the story that walks out with them. New hires can be added any time.`}
+        kicker="The hallway"
+        title="Eleven doors"
+        lede="Each store has a door. Walk in. The lockers inside have names on them. Yours opens with your passcode."
       />
-      <ul className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {board.fighters
-          .slice()
-          .sort((a, b) => (a.seed ?? 99) - (b.seed ?? 99) || a.lastName.localeCompare(b.lastName))
-          .map((f) => {
-            const s = standingOf(board, f.id);
-            return (
-              <li key={f.id}>
-                <Link
-                  to="/fighter/$id"
-                  params={{ id: f.id }}
-                  search={{ slug: board.circuit.slug }}
-                  className="block"
-                >
-                  <FighterPoster
-                    nickname={f.nickname}
-                    name={`${f.firstName} ${f.lastName} · ${formatRecord(recordOf(f.id, board.placements))}`}
-                    hometown={f.hometown}
-                    seed={f.seed}
-                    fact={f.hypeLine || f.funFact}
-                    mark={
-                      <span className="flex items-center gap-2">
-                        <MonoMark first={f.firstName} last={f.lastName} />
-                        {s ? <BracketChip id={s.currentBracket} /> : null}
-                      </span>
-                    }
-                  />
-                </Link>
-              </li>
-            );
-          })}
+      <ul className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {STORES.map((store) => {
+          const room = rooms.find((r) => r.slug === store.slug) ?? emptyRoom(store.slug);
+          const crew = live.filter((f) => storeSlugOf(f.store) === store.slug);
+          return (
+            <li key={store.slug}>
+              <StoreDoor
+                slug={store.slug}
+                name={store.name}
+                short={store.short}
+                count={crew.length}
+                room={room}
+              />
+            </li>
+          );
+        })}
       </ul>
+      {unaffiliated.length ? (
+        <p className="mt-8 text-sm text-muted">
+          {unaffiliated.length} {unaffiliated.length === 1 ? "person has" : "people have"} not picked a
+          door yet. Set home store in My locker.
+        </p>
+      ) : null}
     </Shell>
   );
 }

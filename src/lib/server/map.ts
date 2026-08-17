@@ -1,4 +1,5 @@
 import { normalizeStatus } from "@/lib/circuit/engine";
+import type { TrainingRecord } from "@/lib/circuit/training";
 import type {
   BracketId,
   Circuit,
@@ -12,6 +13,7 @@ import type {
   Metric,
   Placement,
   PlacementResult,
+  Score,
   Week,
   WeekStatus,
 } from "@/lib/circuit/types";
@@ -31,6 +33,8 @@ export type CircuitRow = {
   prize_redemption: string;
   prize_rumble: string;
   week1_byes: number;
+  ticker_text?: string | null;
+  theme?: string | null;
 };
 
 export type FighterRow = {
@@ -48,8 +52,18 @@ export type FighterRow = {
   prior_points: number;
   prior_blues: number;
   prior_reviews: number;
+  socks_sold?: number | null;
   claim_code: string;
   active: boolean;
+  photo_url?: string | null;
+  plate_border?: string | null;
+  plate_bg?: string | null;
+  plate_mark?: string | null;
+  plate_sticker?: string | null;
+  plate_fx?: string | null;
+  departed?: boolean | null;
+  store?: string | null;
+  walkout?: string | null;
 };
 
 export function mapCircuit(r: CircuitRow): Circuit {
@@ -68,6 +82,8 @@ export function mapCircuit(r: CircuitRow): Circuit {
     prizeRedemption: r.prize_redemption,
     prizeRumble: r.prize_rumble,
     week1Byes: Number(r.week1_byes),
+    tickerText: r.ticker_text ?? "",
+    theme: r.theme ?? "house",
   };
 }
 
@@ -87,8 +103,18 @@ export function mapFighter(r: FighterRow): Fighter {
     priorPoints: Number(r.prior_points),
     priorBlues: Number(r.prior_blues),
     priorReviews: Number(r.prior_reviews),
+    socksSold: Number(r.socks_sold ?? 0),
     claimCode: r.claim_code,
     active: Boolean(r.active),
+    departed: Boolean(r.departed),
+    store: r.store ?? "",
+    walkout: r.walkout ?? "",
+    photoUrl: r.photo_url ?? "",
+    plateBorder: r.plate_border ?? "bone",
+    plateBg: r.plate_bg ?? "surface",
+    plateMark: r.plate_mark ?? "",
+    plateSticker: r.plate_sticker ?? "",
+    plateFx: r.plate_fx ?? "",
   };
 }
 
@@ -128,7 +154,8 @@ export function mapScore(r: {
   statuses_json: string;
   reviews: number;
   notes: string;
-}) {
+  training_bonus?: number | boolean | null;
+}): Score {
   return {
     id: r.id,
     circuitId: r.circuit_id,
@@ -137,6 +164,29 @@ export function mapScore(r: {
     statuses: (JSON.parse(r.statuses_json) as string[]).map(normalizeStatus),
     reviews: Number(r.reviews),
     notes: r.notes,
+    trainingBonus: r.training_bonus ? 1 : 0,
+  };
+}
+
+export function mapTraining(r: {
+  fighter_id: string;
+  week_number: number;
+  module_id: string;
+  passed: boolean;
+  awarded?: boolean | null;
+  correct: number;
+  total: number;
+  attempted_at: string | Date;
+}): TrainingRecord {
+  return {
+    fighterId: r.fighter_id,
+    weekNumber: Number(r.week_number),
+    moduleId: r.module_id,
+    passed: Boolean(r.passed),
+    awarded: Boolean(r.awarded),
+    correct: Number(r.correct),
+    total: Number(r.total),
+    attemptedAt: String(r.attempted_at),
   };
 }
 

@@ -8,6 +8,7 @@ import {
 } from "./types";
 import { scorecard } from "./engine";
 import { writeBoutPreview, writeBoutRecap } from "./copy";
+import { weekClose, weekOpen } from "./ring-leader";
 
 function nameOf(f: Fighter) {
   const nick = f.nickname || f.lastName;
@@ -28,14 +29,10 @@ export function writePreview(opts: {
   const isFinal = opts.week === opts.totalWeeks;
   const placements = opts.placements ?? [];
 
-  const headline = isFinal
-    ? `${opts.periodLabel} title night is booked`
-    : `Week ${opts.week} of ${opts.totalWeeks} is on the card`;
+  const headline = isFinal ? "Title night is booked" : `Week ${opts.week} is booked`;
 
   const lines: string[] = [];
-  lines.push(
-    `${opts.circuitName} opens week ${opts.week}. The aisle is lit. Cards are live until the commissioner rings the bell.`,
-  );
+  lines.push(weekOpen(opts.week, opts.totalWeeks, opts.circuitName));
 
   const groups: BracketId[] = ["main", "redemption", "rumble"];
   for (const bracket of groups) {
@@ -59,6 +56,8 @@ export function writePreview(opts: {
   lines.push(
     "Green is three. Blue is two. Orange is one. Red is nothing. Each extra green after the first is a bonus point. A clean sweep — every metric green — is an automatic win. Named five-star reviews are one each, three max. Ties break on greens, then blues, then reviews, then seed.",
   );
+  lines.push("");
+  lines.push("The Floor Gazette.");
 
   return { headline, body: lines.join("\n") };
 }
@@ -79,12 +78,10 @@ export function writeRecap(opts: {
   const isFinal = opts.week === opts.totalWeeks;
   const placements = opts.placements ?? [];
 
-  const headline = isFinal
-    ? `${opts.periodLabel} has its champions`
-    : `Week ${opts.week} is in the books`;
+  const headline = isFinal ? "The champions" : `Week ${opts.week} recap`;
 
   const lines: string[] = [];
-  lines.push(`${opts.circuitName}, week ${opts.week}. The cards are in. Here is who walked out.`);
+  lines.push(`Week ${opts.week}. The cards are in. Here is who walked out.`);
 
   const groups: BracketId[] = ["main", "redemption", "rumble"];
   for (const bracket of groups) {
@@ -116,12 +113,16 @@ export function writeRecap(opts: {
     }
   }
 
+  lines.push("");
+  lines.push(weekClose(opts.week, isFinal));
+
   return { headline, body: lines.join("\n") };
 }
 
-export function scoreLine(statuses: string[], reviews: number) {
-  const card = scorecard(statuses as never, reviews);
-  return `${card.points} pts · ${card.greens} green · ${card.blues} blue · ${card.reviews} review${card.reviews === 1 ? "" : "s"}${card.sweep ? " · sweep" : ""}`;
+export function scoreLine(statuses: string[], reviews: number, trainingBonus = 0) {
+  const card = scorecard(statuses as never, reviews, trainingBonus);
+  const academy = card.trainingBonus ? " · academy +1" : "";
+  return `${card.points} pts · ${card.greens} green · ${card.blues} blue · ${card.reviews} review${card.reviews === 1 ? "" : "s"}${academy}${card.sweep ? " · sweep" : ""}`;
 }
 
 export { nameOf };

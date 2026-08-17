@@ -1,19 +1,29 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Shell } from "@/components/shell";
 import { ScorePad } from "@/components/board/score-pad";
-import { PageHead } from "@/components/arena/ring";
+import { PageHead, RingCard } from "@/components/arena/ring";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input, Label, Textarea } from "@/components/ui/input";
 import { MonoMark, Seed } from "@/components/board/pieces";
+import { PhotoField } from "@/components/board/photo-field";
+import { StoreSelect } from "@/components/board/store-select";
+import { weekAcceptsScores } from "@/lib/circuit/types";
+import { SITE_THEMES } from "@/lib/circuit/themes";
+import { cn } from "@/lib/utils";
 import {
   addFighter,
   addFightersBulk,
+  addFloorJob,
+  removeFloorJob,
   finalizeWeek,
   lockWeek,
   removeFighter,
+  restoreFighter,
+  listPasscodes,
+  rotatePasscode,
   resetDemo,
   rewriteStory,
   rollRemaining,
@@ -23,10 +33,14 @@ import {
   submitScore,
   updateFighter,
   updateSettings,
+  postChallenge,
+  saveHouseCall,
 } from "@/lib/server/circuit";
-import { useBoard, useBoardMutation } from "@/lib/use-board";
+import { onTheBook, useBoard, useBoardMutation } from "@/lib/use-board";
 import { scorecard } from "@/lib/circuit/engine";
-import { SCORE_BLURB } from "@/lib/circuit/types";
+import { awardedBonus } from "@/lib/circuit/training";
+import { WEEKLY_MODULES, LOCKER_GAMES, weekAcademyProgress } from "@/lib/circuit/training";
+import { DEFAULT_TICKER, SCORE_BLURB } from "@/lib/circuit/types";
 import { deskUnlocked, readDeskPin, writeDeskPin, clearDeskPin } from "@/lib/circuit/desk-pin";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import type { BoardPayload } from "@/lib/server/circuit";
@@ -41,7 +55,7 @@ function pinOf() {
 function DeskPage() {
   const { data: board, isPending, refetch } = useBoard();
   const { user, isPending: authPending } = useCurrentUserState();
-  const [tab, setTab] = useState<"week" | "roster" | "seeds" | "settings">("week");
+  const [tab, setTab] = useState<"week" | "roster" | "codes" | "academy" | "seeds" | "jobs" | "house" | "settings">("week");
   const [pin, setPin] = useState("");
   const [open, setOpen] = useState(() => deskUnlocked());
 
@@ -62,7 +76,7 @@ function DeskPage() {
       <PageHead
         kicker="Commissioner desk"
         title={circuit.name}
-        lede="Add people, seed, lock the week, and close it. The floor still marks the scores without this password."
+        lede="Add people, seed, lock the week, and hand out passcodes. Each wrestler uses their own code to mark scores and update their locker."
         action={
           <div className="flex flex-wrap gap-2">
             <Badge tone="bone">
@@ -71,7 +85,7 @@ function DeskPage() {
             <Badge>{circuit.status}</Badge>
             {week ? <Badge tone={week.status === "locked" ? "amber" : "steel"}>{week.status}</Badge> : null}
             <Badge>Join {circuit.joinCode}</Badge>
-            <Badge>{board.fighters.length} on the book</Badge>
+            <Badge>{onTheBook(board.fighters).length} on the book</Badge>
           </div>
         }
       />
@@ -141,8 +155,8 @@ function DeskPage() {
         </div>
       </form>
       <p className="mt-2 text-xs text-subtle">
-        Scores on the sheet do not need this password. Locking a week, adding people, seeding, and
-        advancing do.
+        Scores need each wrestler’s passcode. This password unlocks the desk, the full sheet, and
+        the passcode list.
       </p>
 
       {!authPending && !user && !circuit.isDemo ? (
@@ -151,8 +165,8 @@ function DeskPage() {
         </p>
       ) : null}
 
-      <div className="mt-8 flex gap-2">
-        {(["week", "roster", "seeds", "settings"] as const).map((t) => (
+      <div className="mt-8 flex flex-wrap gap-2">
+        {(["week", "roster", "codes", "academy", "seeds", "jobs", "house", "settings"] as const).map((t) => (
           <button
             key={t}
             type="button"
@@ -166,15 +180,19 @@ function DeskPage() {
         ))}
       </div>
 
-      {tab === "week" ? <WeekDesk board={board} canClose={canClose} /> : null}
+      {tab === "week" ? <WeekDesk board={board} canClose={canClose} unlocked={open} /> : null}
       {tab === "roster" ? <RosterDesk board={board} /> : null}
+      {tab === "codes" ? <CodesDesk board={board} unlocked={open} /> : null}
+      {tab === "academy" ? <AcademyDesk board={board} /> : null}
       {tab === "seeds" ? <SeedsDesk board={board} /> : null}
+      {tab === "jobs" ? <JobsDesk board={board} /> : null}
+      {tab === "house" ? <HouseDesk board={board} unlocked={open} /> : null}
       {tab === "settings" ? <SettingsDesk board={board} /> : null}
     </Shell>
   );
 }
 
-function WeekDesk({ board, canClose }: { board: BoardPayload; canClose: boolean }) {
+function WeekDesk({ board, canClose, unlocked }: { board: BoardPayload; canClose: boolean; unlocked: boolean }) {
   const { circuit } = board;
   const [editing, setEditing] = useState<string | null>(null);
   const week = board.weeks.find((w) => w.weekNumber === circuit.currentWeek);
@@ -200,20 +218,30 @@ function WeekDesk({ board, canClose }: { board: BoardPayload; canClose: boolean 
 
   return (
     <div className="mt-8 space-y-6">
-      <div className="flex flex-wrap gap-2">
-        {circuit.status === "setup" ? (
+      {circuit.status === "setup" ? (
+        <RingCard className="border-amber/40 bg-amber/10 p-5 sm:p-7">
+          <p className="kicker !text-amber">The bell has not rung</p>
+          <h2 className="mt-2 font-display text-3xl italic">Open week 1 to start the matches</h2>
+          <p className="mt-2 max-w-xl text-sm text-muted">
+            When every card in a match is in, the week closes itself and the next one books. You can still close early. Pairings, the card, and the gazette print when you
+            open week 1. Unlock the desk first if the button is grey.
+          </p>
           <Button
+            className="mt-5"
+            size="lg"
             onClick={() =>
               start.mutate(undefined, {
-                onSuccess: () => toast.success("Circuit is live. Week 1 is open."),
+                onSuccess: () => toast.success("Week 1 is open. The card is live."),
                 onError: (e) => toast.error(e.message),
               })
             }
-            disabled={start.isPending}
+            disabled={start.isPending || !unlocked}
           >
-            Seed and open week 1
+            {start.isPending ? "Opening…" : unlocked ? "Seed and open week 1" : "Unlock the desk first"}
           </Button>
-        ) : null}
+        </RingCard>
+      ) : null}
+      <div className="flex flex-wrap gap-2">
         {canClose ? (
           <>
             <Button asChild variant="outline">
@@ -291,14 +319,20 @@ function WeekDesk({ board, canClose }: { board: BoardPayload; canClose: boolean 
           const s = board.scores.find(
             (x) => x.fighterId === id && x.weekNumber === circuit.currentWeek,
           );
-          const card = s ? scorecard(s.statuses, s.reviews) : null;
+          const card = s
+            ? scorecard(s.statuses, s.reviews, s.trainingBonus)
+            : awardedBonus(board.academy, id, circuit.currentWeek)
+              ? scorecard([], 0, 1)
+              : null;
           return (
             <li key={id} className="px-4 py-3">
               <div className="flex flex-wrap items-center gap-3">
                 <Seed n={f.seed} />
                 <span className="min-w-0 flex-1 truncate font-medium">{f.nickname}</span>
-                <span className="text-xs text-subtle">{f.claimCode}</span>
                 <span className="tabular text-sm">{card ? `${card.points} pts` : "—"}</span>
+                {awardedBonus(board.academy, id, circuit.currentWeek) ? (
+                  <span className="text-[11px] uppercase tracking-[0.12em] text-sage">Academy</span>
+                ) : null}
                 <Button size="sm" variant="ghost" onClick={() => setEditing(editing === id ? null : id)}>
                   {editing === id ? "Close" : "Edit"}
                 </Button>
@@ -311,7 +345,8 @@ function WeekDesk({ board, canClose }: { board: BoardPayload; canClose: boolean 
                     initialStatuses={s?.statuses}
                     initialReviews={s?.reviews}
                     initialNotes={s?.notes}
-                    disabled={week?.status !== "open"}
+                    trainingBonus={awardedBonus(board.academy, id, circuit.currentWeek)}
+                    disabled={!weekAcceptsScores(week?.status ?? "")}
                     pending={save.isPending}
                     onSubmit={(d) => {
                       save.mutate(
@@ -319,6 +354,7 @@ function WeekDesk({ board, canClose }: { board: BoardPayload; canClose: boolean 
                           slug: circuit.slug,
                           fighterId: id,
                           weekNumber: circuit.currentWeek,
+                          pin: pinOf(),
                           statuses: d.statuses,
                           reviews: d.reviews,
                           notes: d.notes,
@@ -343,12 +379,225 @@ function WeekDesk({ board, canClose }: { board: BoardPayload; canClose: boolean 
   );
 }
 
+function AcademyDesk({ board }: { board: BoardPayload }) {
+  const weekly = WEEKLY_MODULES;
+  const games = LOCKER_GAMES;
+  const passed = (fighterId: string, moduleId: string) =>
+    board.academy.find((r) => r.fighterId === fighterId && r.moduleId === moduleId);
+  const countFor = (moduleId: string) =>
+    board.academy.filter((r) => r.moduleId === moduleId && r.passed).length;
+
+  return (
+    <div className="mt-8 space-y-6">
+      <p className="text-sm text-muted">
+        Four films a week. The first pass while scores are open is +1 on that week’s card. The
+        other three are still required work. Locker games are practice. The quiz grades itself.
+      </p>
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {[...weekly, ...games].map((m) => (
+          <div key={m.id} className="rounded-lg border border-line bg-surface px-4 py-3">
+            <p className="kicker">{m.kicker}</p>
+            <p className="mt-1 font-display text-xl italic">{m.title}</p>
+            <p className="mt-2 text-sm text-muted">
+              {countFor(m.id)} passed
+              {m.weekNumber ? " · bonus week" : " · no bonus"}
+            </p>
+          </div>
+        ))}
+      </div>
+      <div className="overflow-x-auto rounded-xl border border-line bg-surface">
+        <table className="w-full min-w-[640px] border-collapse text-sm">
+          <thead className="bg-raised text-left text-xs uppercase tracking-[0.12em] text-subtle">
+            <tr>
+              <th className="px-4 py-3 font-medium">Wrestler</th>
+              {[1, 2, 3, 4].map((w) => (
+                <th key={w} className="px-3 py-3 font-medium">
+                  W{w}
+                </th>
+              ))}
+              {games.map((m) => (
+                <th key={m.id} className="px-3 py-3 font-medium">
+                  {m.title.split(" ")[0]}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {board.fighters.map((f) => (
+              <tr key={f.id} className="border-t border-line">
+                <td className="px-4 py-3">
+                  <p className="font-display italic">{f.nickname}</p>
+                  <p className="text-xs text-muted">
+                    {f.firstName} {f.lastName}
+                  </p>
+                </td>
+                {[1, 2, 3, 4].map((w) => {
+                  const prog = weekAcademyProgress(board.academy, f.id, w);
+                  return (
+                    <td key={w} className="px-3 py-3 tabular text-xs uppercase tracking-[0.1em]">
+                      <span className={prog.bonus ? "text-sage" : prog.have ? "text-steel" : "text-subtle"}>
+                        {prog.have}/{prog.need}
+                        {prog.bonus ? " +1" : ""}
+                      </span>
+                    </td>
+                  );
+                })}
+                {games.map((m) => {
+                  const rec = passed(f.id, m.id);
+                  return (
+                    <td key={m.id} className="px-3 py-3 tabular text-xs uppercase tracking-[0.1em] text-subtle">
+                      {rec?.passed ? <span className="text-steel">ok</span> : "—"}
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function CodesDesk({ board, unlocked }: { board: BoardPayload; unlocked: boolean }) {
+  const [rows, setRows] = useState<Array<{
+    id: string;
+    firstName: string;
+    lastName: string;
+    nickname: string;
+    seed: number | null;
+    passcode: string;
+  }>>([]);
+  const [busy, setBusy] = useState(false);
+
+  async function load() {
+    if (!unlocked) return;
+    setBusy(true);
+    try {
+      const list = await listPasscodes({ data: { slug: board.circuit.slug, pin: pinOf() } });
+      setRows(list);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not load passcodes.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  useEffect(() => {
+    void load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [unlocked, board.circuit.id, board.fighters.length]);
+
+  function sheetText() {
+    return rows
+      .map((r) => `${r.nickname} (${r.firstName} ${r.lastName}) — ${r.passcode}`)
+      .join("\n");
+  }
+
+  if (!unlocked) {
+    return (
+      <div className="mt-8 rounded-xl border border-line bg-surface p-6">
+        <p className="font-display text-3xl italic">Passcodes stay in this desk.</p>
+        <p className="mt-2 max-w-md text-sm text-muted">
+          Unlock with the commissioner password to see every wrestler’s code. Hand them out store by
+          store. Nobody else can see this list.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-8 space-y-4">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <p className="kicker">Hand these out</p>
+          <h2 className="mt-1 font-display text-3xl italic">{rows.length} passcodes</h2>
+          <p className="mt-1 max-w-xl text-sm text-muted">
+            One code per person. They use it on the scoresheet to mark their card and update hometown,
+            fun fact, and photo.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant="outline"
+            onClick={async () => {
+              try {
+                await navigator.clipboard.writeText(sheetText());
+                toast.success("Copied every passcode.");
+              } catch {
+                toast.error("Could not copy.");
+              }
+            }}
+          >
+            Copy all
+          </Button>
+          <Button variant="outline" onClick={() => window.print()}>
+            Print
+          </Button>
+        </div>
+      </div>
+      <div className="max-w-full overflow-x-auto rounded-xl border border-line bg-surface">
+        <table className="w-full min-w-[560px] border-collapse text-sm">
+          <thead className="bg-raised text-left text-xs uppercase tracking-[0.12em] text-subtle">
+            <tr>
+              <th className="px-4 py-3 font-medium">Seed</th>
+              <th className="px-4 py-3 font-medium">Wrestler</th>
+              <th className="px-4 py-3 font-medium">Name</th>
+              <th className="px-4 py-3 font-medium">Passcode</th>
+              <th className="px-4 py-3 font-medium" />
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r) => (
+              <tr key={r.id} className="border-t border-line">
+                <td className="px-4 py-3 tabular text-subtle">{r.seed ?? "—"}</td>
+                <td className="px-4 py-3 font-display text-lg italic">{r.nickname}</td>
+                <td className="px-4 py-3 text-muted">
+                  {r.firstName} {r.lastName}
+                </td>
+                <td className="px-4 py-3">
+                  <span className="rounded-sm border border-bone/30 bg-bone/10 px-2 py-1 font-mono text-sm tracking-wide">
+                    {r.passcode}
+                  </span>
+                </td>
+                <td className="px-4 py-3 text-right">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={async () => {
+                      try {
+                        const next = await rotatePasscode({
+                          data: { slug: board.circuit.slug, fighterId: r.id, pin: pinOf() },
+                        });
+                        setRows((prev) =>
+                          prev.map((x) => (x.id === r.id ? { ...x, passcode: next.passcode } : x)),
+                        );
+                        toast.success(`New code for ${r.nickname}: ${next.passcode}`);
+                      } catch (e) {
+                        toast.error(e instanceof Error ? e.message : "Could not rotate.");
+                      }
+                    }}
+                  >
+                    New code
+                  </Button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {busy && rows.length === 0 ? <p className="text-sm text-subtle">Loading codes…</p> : null}
+    </div>
+  );
+}
+
 function RosterDesk({ board }: { board: BoardPayload }) {
   const [first, setFirst] = useState("");
   const [last, setLast] = useState("");
   const [nick, setNick] = useState("");
   const [hometown, setHometown] = useState("");
   const [funFact, setFunFact] = useState("");
+  const [store, setStore] = useState("");
   const [seed, setSeed] = useState("");
   const [pts, setPts] = useState("0");
   const [blues, setBlues] = useState("0");
@@ -360,6 +609,9 @@ function RosterDesk({ board }: { board: BoardPayload }) {
   );
   const drop = useBoardMutation((d: Parameters<typeof removeFighter>[0]["data"]) =>
     removeFighter({ data: d }),
+  );
+  const back = useBoardMutation((d: Parameters<typeof restoreFighter>[0]["data"]) =>
+    restoreFighter({ data: d }),
   );
 
   return (
@@ -379,6 +631,7 @@ function RosterDesk({ board }: { board: BoardPayload }) {
                   nickname: nick,
                   hometown,
                   funFact,
+                  store,
                   seed: seed ? Number(seed) : null,
                   priorPoints: Number(pts) || 0,
                   priorBlues: Number(blues) || 0,
@@ -411,6 +664,7 @@ function RosterDesk({ board }: { board: BoardPayload }) {
           </div>
           <Field label="Nickname (optional)" value={nick} onChange={setNick} />
           <Field label="Hometown" value={hometown} onChange={setHometown} />
+          <div><Label>Home store</Label><div className="mt-1.5"><StoreSelect value={store} onChange={setStore} /></div></div>
           <Field label="One fun fact" value={funFact} onChange={setFunFact} />
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             <Field label="Seed" value={seed} onChange={setSeed} />
@@ -455,17 +709,30 @@ function RosterDesk({ board }: { board: BoardPayload }) {
       <ul className="space-y-2">
         {board.fighters
           .slice()
-          .sort((a, b) => (a.seed ?? 99) - (b.seed ?? 99) || a.lastName.localeCompare(b.lastName))
+          .sort((a, b) => Number(a.departed) - Number(b.departed) || (a.seed ?? 99) - (b.seed ?? 99) || a.lastName.localeCompare(b.lastName))
           .map((f) => (
             <FighterAdminRow
               key={f.id}
               fighter={f}
               slug={board.circuit.slug}
-              setup={board.circuit.status === "setup"}
-              onRemove={() =>
+              onRemove={() => {
+                const name = f.nickname || `${f.firstName} ${f.lastName}`;
+                if (!window.confirm(`Take ${name} off the card? Past weeks stay in the book. You can put them back.`)) return;
                 drop.mutate(
                   { slug: board.circuit.slug, fighterId: f.id, pin: pinOf() },
-                  { onError: (e) => toast.error(e.message) },
+                  {
+                    onSuccess: () => toast.success(`${name} is off the card.`),
+                    onError: (e) => toast.error(e.message),
+                  },
+                );
+              }}
+              onRestore={() =>
+                back.mutate(
+                  { slug: board.circuit.slug, fighterId: f.id, pin: pinOf() },
+                  {
+                    onSuccess: () => toast.success("They are back on the rumble card."),
+                    onError: (e) => toast.error(e.message),
+                  },
                 )
               }
             />
@@ -478,18 +745,20 @@ function RosterDesk({ board }: { board: BoardPayload }) {
 function FighterAdminRow({
   fighter,
   slug,
-  setup,
   onRemove,
+  onRestore,
 }: {
   fighter: Fighter;
   slug: string;
-  setup: boolean;
   onRemove: () => void;
+  onRestore: () => void;
 }) {
   const [open, setOpen] = useState(false);
   const [hometown, setHometown] = useState(fighter.hometown);
   const [funFact, setFunFact] = useState(fighter.funFact);
+  const [store, setStore] = useState(fighter.store);
   const [seed, setSeed] = useState(fighter.seed ? String(fighter.seed) : "");
+  const [socks, setSocks] = useState(String(fighter.socksSold ?? 0));
   const [story, setStory] = useState(fighter.backstory);
   const save = useBoardMutation((d: Parameters<typeof updateFighter>[0]["data"]) =>
     updateFighter({ data: d }),
@@ -499,26 +768,30 @@ function FighterAdminRow({
   );
 
   return (
-    <li className="rounded-lg border border-line bg-surface px-3 py-2">
+    <li className={`rounded-lg border px-3 py-2 ${fighter.departed ? "border-rose/30 bg-rose/5" : "border-line bg-surface"}`}>
       <div className="flex items-center gap-3">
-        <MonoMark first={fighter.firstName} last={fighter.lastName} className="size-9 text-xs" />
+        <PhotoField fighter={fighter} slug={slug} compact markClassName="size-11 text-xs" pin={pinOf()} />
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-medium">
             <Seed n={fighter.seed} /> {fighter.nickname}
           </p>
           <p className="truncate text-xs text-muted">
             {fighter.firstName} {fighter.lastName}
-            {fighter.hometown ? ` · ${fighter.hometown}` : ""} · {fighter.claimCode}
+            {fighter.departed ? " · left the team" : fighter.hometown ? ` · ${fighter.hometown}` : ""}
           </p>
         </div>
         <Button size="sm" variant="ghost" onClick={() => setOpen(!open)}>
           {open ? "Close" : "Edit"}
         </Button>
-        {setup ? (
+        {fighter.departed ? (
+          <Button size="sm" variant="outline" onClick={onRestore}>
+            Put back
+          </Button>
+        ) : (
           <Button size="sm" variant="ghost" onClick={onRemove}>
             Remove
           </Button>
-        ) : null}
+        )}
       </div>
       {open ? (
         <form
@@ -533,7 +806,9 @@ function FighterAdminRow({
                 patch: {
                   hometown,
                   funFact,
+                  store,
                   seed: seed ? Number(seed) : null,
+                  socksSold: Number(socks) || 0,
                   backstory: story,
                 },
               },
@@ -544,9 +819,12 @@ function FighterAdminRow({
             );
           }}
         >
+          <PhotoField fighter={fighter} slug={slug} markClassName="size-16 text-base" />
           <Field label="Hometown" value={hometown} onChange={setHometown} />
+          <div><Label>Home store</Label><div className="mt-1.5"><StoreSelect value={store} onChange={setStore} /></div></div>
           <Field label="Fun fact" value={funFact} onChange={setFunFact} />
           <Field label="Seed" value={seed} onChange={setSeed} />
+          <Field label="Socks sold · tiebreak" value={socks} onChange={setSocks} />
           <div>
             <Label>Backstory</Label>
             <Textarea className="mt-1.5" value={story} onChange={(e) => setStory(e.target.value)} />
@@ -657,7 +935,7 @@ function SeedsDesk({ board }: { board: BoardPayload }) {
                 value={seeds[f.id] ?? ""}
                 onChange={(e) => setSeeds((prev) => ({ ...prev, [f.id]: e.target.value }))}
               />
-              <MonoMark first={f.firstName} last={f.lastName} className="size-9 text-xs" />
+              <MonoMark first={f.firstName} last={f.lastName} photo={f.photoUrl} className="size-9 text-xs" />
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium">{f.nickname}</p>
                 <p className="truncate text-xs text-muted">
@@ -677,6 +955,8 @@ function SettingsDesk({ board }: { board: BoardPayload }) {
   const [p1, setP1] = useState(board.circuit.prizeMain);
   const [p2, setP2] = useState(board.circuit.prizeRedemption);
   const [p3, setP3] = useState(board.circuit.prizeRumble);
+  const [ticker, setTicker] = useState(board.circuit.tickerText || DEFAULT_TICKER.join("\n"));
+  const [theme, setTheme] = useState(board.circuit.theme || "house");
   const [metrics, setMetrics] = useState(board.metrics.map((m) => ({ id: m.id, label: m.label })));
   const save = useBoardMutation((d: Parameters<typeof updateSettings>[0]["data"]) =>
     updateSettings({ data: d }),
@@ -695,6 +975,8 @@ function SettingsDesk({ board }: { board: BoardPayload }) {
             prizeMain: p1,
             prizeRedemption: p2,
             prizeRumble: p3,
+            tickerText: ticker,
+            theme,
             metrics,
           },
           {
@@ -708,6 +990,56 @@ function SettingsDesk({ board }: { board: BoardPayload }) {
       <Field label="Main prize" value={p1} onChange={setP1} />
       <Field label="Redemption prize" value={p2} onChange={setP2} />
       <Field label="Rumble prize" value={p3} onChange={setP3} />
+      <div>
+        <Label>House lights</Label>
+        <p className="mt-1 mb-3 text-sm text-muted">
+          Mix the building. Everyone sees it. Scores and greens stay the same.
+        </p>
+        <ul className="grid gap-2 sm:grid-cols-2">
+          {SITE_THEMES.map((opt) => (
+            <li key={opt.id}>
+              <button
+                type="button"
+                onClick={() => {
+                  setTheme(opt.id);
+                  if (opt.id === "house") delete document.documentElement.dataset.theme;
+                  else document.documentElement.dataset.theme = opt.id;
+                }}
+                className={cn(
+                  "w-full rounded-lg border px-3 py-3 text-left",
+                  theme === opt.id ? "border-bone bg-bone/10" : "border-line hover:bg-raised",
+                )}
+              >
+                <span className="flex items-center gap-2">
+                  <span className={cn("size-4 rounded-full", 
+                    opt.id === "house" && "bg-rose",
+                    opt.id === "midnight" && "bg-steel",
+                    opt.id === "garden" && "bg-sage",
+                    opt.id === "neon" && "bg-neon-pink",
+                    opt.id === "gold" && "bg-gold",
+                    opt.id === "ice" && "bg-steel",
+                  )} />
+                  <span className="font-display text-lg italic">{opt.name}</span>
+                </span>
+                <span className="mt-1 block text-xs text-muted">{opt.blurb}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <div>
+        <Label htmlFor="ticker">Rolling message board</Label>
+        <Textarea
+          id="ticker"
+          className="mt-1.5 min-h-40"
+          value={ticker}
+          onChange={(e) => setTicker(e.target.value)}
+        />
+        <p className="mt-1.5 text-sm text-muted">
+          One line per message. They scroll across the top of every page. Clear the box and save
+          to restore the default board.
+        </p>
+      </div>
       <div className="space-y-2">
         <Label>Metrics</Label>
         {metrics.map((m, i) => (
@@ -745,6 +1077,223 @@ function Field({
     <div>
       <Label>{label}</Label>
       <Input className="mt-1.5" value={value} required={required} onChange={(e) => onChange(e.target.value)} />
+    </div>
+  );
+}
+
+function JobsDesk({ board }: { board: BoardPayload }) {
+  const [title, setTitle] = useState("");
+  const [blurb, setBlurb] = useState("");
+  const [stars, setStars] = useState("1");
+  const [pack, setPack] = useState<"sales" | "ops" | "kind">("ops");
+  const add = useBoardMutation((d: Parameters<typeof addFloorJob>[0]["data"]) => addFloorJob({ data: d }));
+  const drop = useBoardMutation((d: Parameters<typeof removeFloorJob>[0]["data"]) => removeFloorJob({ data: d }));
+  const catalog = board.jobCatalog ?? [];
+  const groups: Array<"sales" | "ops" | "kind"> = ["sales", "ops", "kind"];
+  const labels = { sales: "Sales", ops: "House", kind: "Team" } as const;
+
+  return (
+    <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,22rem)_1fr]">
+      <form
+        className="space-y-3"
+        onSubmit={(e) => {
+          e.preventDefault();
+          add.mutate(
+            { slug: board.circuit.slug, pin: pinOf(), title, blurb, stars: Number(stars) || 1, pack },
+            {
+              onSuccess: () => {
+                setTitle("");
+                setBlurb("");
+                toast.success("Job is in the pool. Next deal can pull it.");
+              },
+              onError: (err) => toast.error(err.message),
+            },
+          );
+        }}
+      >
+        <p className="kicker">Add a job</p>
+        <h2 className="font-display text-3xl italic">The pool stays open</h2>
+        <p className="text-sm text-muted">
+          Each person gets four random jobs every week: one sales, one house, one team, and one wild
+          card. Add anything you want in the mix.
+        </p>
+        <div>
+          <Label htmlFor="job-title">Job</Label>
+          <Input id="job-title" className="mt-1.5" value={title} onChange={(e) => setTitle(e.target.value)} required />
+        </div>
+        <div>
+          <Label htmlFor="job-blurb">What good looks like</Label>
+          <Textarea id="job-blurb" className="mt-1.5" value={blurb} onChange={(e) => setBlurb(e.target.value)} />
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <Label htmlFor="job-stars">Stars</Label>
+            <Input id="job-stars" className="mt-1.5" type="number" min={1} max={3} value={stars} onChange={(e) => setStars(e.target.value)} />
+          </div>
+          <div>
+            <Label htmlFor="job-pack">Pack</Label>
+            <select
+              id="job-pack"
+              className="mt-1.5 h-11 w-full rounded-sm border border-line bg-raised px-3 text-sm"
+              value={pack}
+              onChange={(e) => setPack(e.target.value as "sales" | "ops" | "kind")}
+            >
+              <option value="sales">Sales</option>
+              <option value="ops">House</option>
+              <option value="kind">Team</option>
+            </select>
+          </div>
+        </div>
+        <Button type="submit" disabled={add.isPending}>
+          {add.isPending ? "Adding…" : "Add to the pool"}
+        </Button>
+      </form>
+
+      <div className="space-y-6">
+        {groups.map((g) => (
+          <div key={g}>
+            <p className="kicker">{labels[g]}</p>
+            <ul className="mt-2 divide-y divide-line rounded-xl border border-line bg-surface">
+              {catalog
+                .filter((j) => j.pack === g && j.live)
+                .map((j) => (
+                  <li key={j.id} className="flex items-start justify-between gap-3 px-4 py-3">
+                    <div className="min-w-0">
+                      <p className="font-display text-lg italic leading-tight">{j.title}</p>
+                      {j.blurb ? <p className="mt-1 text-sm text-muted">{j.blurb}</p> : null}
+                      <p className="mt-1 text-[11px] uppercase tracking-[0.14em] text-subtle">
+                        {j.stars} star{j.stars === 1 ? "" : "s"}
+                        {j.custom ? " · yours" : ""}
+                      </p>
+                    </div>
+                    {j.custom ? (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        disabled={drop.isPending}
+                        onClick={() =>
+                          drop.mutate(
+                            { slug: board.circuit.slug, pin: pinOf(), jobId: j.id },
+                            {
+                              onSuccess: () => toast.success("Pulled from the pool."),
+                              onError: (err) => toast.error(err.message),
+                            },
+                          )
+                        }
+                      >
+                        Remove
+                      </Button>
+                    ) : null}
+                  </li>
+                ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+
+
+function HouseDesk({ board, unlocked }: { board: BoardPayload; unlocked: boolean }) {
+  const week = board.circuit.currentWeek;
+  const live = (board.challenges ?? []).find((c) => c.weekNumber === week);
+  const call = (board.houseCalls ?? []).find((c) => c.weekNumber === week);
+  const [title, setTitle] = useState(live?.title ?? "");
+  const [blurb, setBlurb] = useState(live?.blurb ?? "");
+  const [faceId, setFaceId] = useState(call?.faceId ?? "");
+  const [heelId, setHeelId] = useState(call?.heelId ?? "");
+  const post = useBoardMutation((d: Parameters<typeof postChallenge>[0]["data"]) => postChallenge({ data: d }));
+  const callSave = useBoardMutation((d: Parameters<typeof saveHouseCall>[0]["data"]) => saveHouseCall({ data: d }));
+  const book = onTheBook(board.fighters);
+
+  return (
+    <div className="mt-8 grid gap-8 lg:grid-cols-2">
+      <form
+        className="space-y-3 rounded-xl border border-line bg-surface p-5"
+        onSubmit={(e) => {
+          e.preventDefault();
+          post.mutate(
+            { slug: board.circuit.slug, title, blurb, pin: pinOf() },
+            {
+              onSuccess: () => toast.success("Challenge is up."),
+              onError: (err) => toast.error(err.message),
+            },
+          );
+        }}
+      >
+        <p className="kicker">This week’s challenge</p>
+        <h2 className="mt-1 font-display text-3xl italic">Drop one extra job</h2>
+        <p className="text-sm text-muted">
+          First three lockers to mark it get the desk stamp. Not for sale.
+        </p>
+        <Field label="The job" value={title} onChange={setTitle} />
+        <div>
+          <Label>Note</Label>
+          <Textarea className="mt-1.5" value={blurb} onChange={(e) => setBlurb(e.target.value)} />
+        </div>
+        <Button type="submit" disabled={post.isPending || !unlocked || !title.trim()}>
+          {post.isPending ? "Posting…" : unlocked ? "Post the challenge" : "Unlock first"}
+        </Button>
+        {live ? (
+          <ul className="mt-3 space-y-1 text-sm text-muted">
+            {live.claims.length ? live.claims.map((c) => {
+              const f = board.fighters.find((x) => x.id === c.fighterId);
+              return <li key={c.fighterId}>{f?.nickname ?? "Claimed"}</li>;
+            }) : <li>Nobody has claimed it yet.</li>}
+          </ul>
+        ) : null}
+      </form>
+
+      <form
+        className="space-y-3 rounded-xl border border-line bg-surface p-5"
+        onSubmit={(e) => {
+          e.preventDefault();
+          callSave.mutate(
+            { slug: board.circuit.slug, faceId, heelId, pin: pinOf() },
+            {
+              onSuccess: () => toast.success("Face and heel are set."),
+              onError: (err) => toast.error(err.message),
+            },
+          );
+        }}
+      >
+        <p className="kicker">House call</p>
+        <h2 className="mt-1 font-display text-3xl italic">Babyface and heel</h2>
+        <p className="text-sm text-muted">You pick. They wear a sash all week.</p>
+        <div>
+          <Label htmlFor="face">Babyface · most helpful</Label>
+          <select
+            id="face"
+            className="mt-1.5 flex h-11 w-full rounded-sm border border-line bg-raised px-3 text-sm"
+            value={faceId}
+            onChange={(e) => setFaceId(e.target.value)}
+          >
+            <option value="">Nobody</option>
+            {book.map((f) => (
+              <option key={f.id} value={f.id}>{f.nickname}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <Label htmlFor="heel">Heel · biggest closer</Label>
+          <select
+            id="heel"
+            className="mt-1.5 flex h-11 w-full rounded-sm border border-line bg-raised px-3 text-sm"
+            value={heelId}
+            onChange={(e) => setHeelId(e.target.value)}
+          >
+            <option value="">Nobody</option>
+            {book.map((f) => (
+              <option key={f.id} value={f.id}>{f.nickname}</option>
+            ))}
+          </select>
+        </div>
+        <Button type="submit" disabled={callSave.isPending || !unlocked}>
+          {callSave.isPending ? "Saving…" : unlocked ? "Lock the call" : "Unlock first"}
+        </Button>
+      </form>
     </div>
   );
 }

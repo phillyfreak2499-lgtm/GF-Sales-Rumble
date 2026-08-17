@@ -12,7 +12,10 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as BoutsRouteImport } from './routes/bouts'
 import { Route as CardRouteImport } from './routes/card'
+import { Route as CeremonyRouteImport } from './routes/ceremony'
 import { Route as DeskRouteImport } from './routes/desk'
+import { Route as HonorsRouteImport } from './routes/honors'
+import { Route as HowRouteImport } from './routes/how'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as NewRouteImport } from './routes/new'
 import { Route as ReportRouteImport } from './routes/report'
@@ -20,6 +23,9 @@ import { Route as RosterRouteImport } from './routes/roster'
 import { Route as ScoreRouteImport } from './routes/score'
 import { Route as SubmitRouteImport } from './routes/submit'
 import { Route as FighterIdRouteImport } from './routes/fighter.$id'
+import { Route as PlaySlugRouteImport } from './routes/play.$slug'
+import { Route as PrintIdRouteImport } from './routes/print.$id'
+import { Route as RoomSlugRouteImport } from './routes/room.$slug'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 
 const IndexRoute = IndexRouteImport.update({
@@ -37,9 +43,24 @@ const CardRoute = CardRouteImport.update({
   path: '/card',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CeremonyRoute = CeremonyRouteImport.update({
+  id: '/ceremony',
+  path: '/ceremony',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DeskRoute = DeskRouteImport.update({
   id: '/desk',
   path: '/desk',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HonorsRoute = HonorsRouteImport.update({
+  id: '/honors',
+  path: '/honors',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HowRoute = HowRouteImport.update({
+  id: '/how',
+  path: '/how',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -77,6 +98,21 @@ const FighterIdRoute = FighterIdRouteImport.update({
   path: '/fighter/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PlaySlugRoute = PlaySlugRouteImport.update({
+  id: '/play/$slug',
+  path: '/play/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrintIdRoute = PrintIdRouteImport.update({
+  id: '/print/$id',
+  path: '/print/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RoomSlugRoute = RoomSlugRouteImport.update({
+  id: '/room/$slug',
+  path: '/room/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
@@ -87,7 +123,10 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/bouts': typeof BoutsRoute
   '/card': typeof CardRoute
+  '/ceremony': typeof CeremonyRoute
   '/desk': typeof DeskRoute
+  '/honors': typeof HonorsRoute
+  '/how': typeof HowRoute
   '/login': typeof LoginRoute
   '/new': typeof NewRoute
   '/report': typeof ReportRoute
@@ -95,13 +134,19 @@ export interface FileRoutesByFullPath {
   '/score': typeof ScoreRoute
   '/submit': typeof SubmitRoute
   '/fighter/$id': typeof FighterIdRoute
+  '/play/$slug': typeof PlaySlugRoute
+  '/print/$id': typeof PrintIdRoute
+  '/room/$slug': typeof RoomSlugRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/bouts': typeof BoutsRoute
   '/card': typeof CardRoute
+  '/ceremony': typeof CeremonyRoute
   '/desk': typeof DeskRoute
+  '/honors': typeof HonorsRoute
+  '/how': typeof HowRoute
   '/login': typeof LoginRoute
   '/new': typeof NewRoute
   '/report': typeof ReportRoute
@@ -109,6 +154,9 @@ export interface FileRoutesByTo {
   '/score': typeof ScoreRoute
   '/submit': typeof SubmitRoute
   '/fighter/$id': typeof FighterIdRoute
+  '/play/$slug': typeof PlaySlugRoute
+  '/print/$id': typeof PrintIdRoute
+  '/room/$slug': typeof RoomSlugRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesById {
@@ -116,7 +164,10 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/bouts': typeof BoutsRoute
   '/card': typeof CardRoute
+  '/ceremony': typeof CeremonyRoute
   '/desk': typeof DeskRoute
+  '/honors': typeof HonorsRoute
+  '/how': typeof HowRoute
   '/login': typeof LoginRoute
   '/new': typeof NewRoute
   '/report': typeof ReportRoute
@@ -124,6 +175,9 @@ export interface FileRoutesById {
   '/score': typeof ScoreRoute
   '/submit': typeof SubmitRoute
   '/fighter/$id': typeof FighterIdRoute
+  '/play/$slug': typeof PlaySlugRoute
+  '/print/$id': typeof PrintIdRoute
+  '/room/$slug': typeof RoomSlugRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRouteTypes {
@@ -132,7 +186,10 @@ export interface FileRouteTypes {
     | '/'
     | '/bouts'
     | '/card'
+    | '/ceremony'
     | '/desk'
+    | '/honors'
+    | '/how'
     | '/login'
     | '/new'
     | '/report'
@@ -140,13 +197,19 @@ export interface FileRouteTypes {
     | '/score'
     | '/submit'
     | '/fighter/$id'
+    | '/play/$slug'
+    | '/print/$id'
+    | '/room/$slug'
     | '/api/auth/$'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/bouts'
     | '/card'
+    | '/ceremony'
     | '/desk'
+    | '/honors'
+    | '/how'
     | '/login'
     | '/new'
     | '/report'
@@ -154,13 +217,19 @@ export interface FileRouteTypes {
     | '/score'
     | '/submit'
     | '/fighter/$id'
+    | '/play/$slug'
+    | '/print/$id'
+    | '/room/$slug'
     | '/api/auth/$'
   id:
     | '__root__'
     | '/'
     | '/bouts'
     | '/card'
+    | '/ceremony'
     | '/desk'
+    | '/honors'
+    | '/how'
     | '/login'
     | '/new'
     | '/report'
@@ -168,6 +237,9 @@ export interface FileRouteTypes {
     | '/score'
     | '/submit'
     | '/fighter/$id'
+    | '/play/$slug'
+    | '/print/$id'
+    | '/room/$slug'
     | '/api/auth/$'
   fileRoutesById: FileRoutesById
 }
@@ -175,7 +247,10 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   BoutsRoute: typeof BoutsRoute
   CardRoute: typeof CardRoute
+  CeremonyRoute: typeof CeremonyRoute
   DeskRoute: typeof DeskRoute
+  HonorsRoute: typeof HonorsRoute
+  HowRoute: typeof HowRoute
   LoginRoute: typeof LoginRoute
   NewRoute: typeof NewRoute
   ReportRoute: typeof ReportRoute
@@ -183,6 +258,9 @@ export interface RootRouteChildren {
   ScoreRoute: typeof ScoreRoute
   SubmitRoute: typeof SubmitRoute
   FighterIdRoute: typeof FighterIdRoute
+  PlaySlugRoute: typeof PlaySlugRoute
+  PrintIdRoute: typeof PrintIdRoute
+  RoomSlugRoute: typeof RoomSlugRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
 
@@ -209,11 +287,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CardRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ceremony': {
+      id: '/ceremony'
+      path: '/ceremony'
+      fullPath: '/ceremony'
+      preLoaderRoute: typeof CeremonyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/desk': {
       id: '/desk'
       path: '/desk'
       fullPath: '/desk'
       preLoaderRoute: typeof DeskRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/honors': {
+      id: '/honors'
+      path: '/honors'
+      fullPath: '/honors'
+      preLoaderRoute: typeof HonorsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/how': {
+      id: '/how'
+      path: '/how'
+      fullPath: '/how'
+      preLoaderRoute: typeof HowRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -265,6 +364,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FighterIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/play/$slug': {
+      id: '/play/$slug'
+      path: '/play/$slug'
+      fullPath: '/play/$slug'
+      preLoaderRoute: typeof PlaySlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/print/$id': {
+      id: '/print/$id'
+      path: '/print/$id'
+      fullPath: '/print/$id'
+      preLoaderRoute: typeof PrintIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/room/$slug': {
+      id: '/room/$slug'
+      path: '/room/$slug'
+      fullPath: '/room/$slug'
+      preLoaderRoute: typeof RoomSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/auth/$': {
       id: '/api/auth/$'
       path: '/api/auth/$'
@@ -279,7 +399,10 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   BoutsRoute: BoutsRoute,
   CardRoute: CardRoute,
+  CeremonyRoute: CeremonyRoute,
   DeskRoute: DeskRoute,
+  HonorsRoute: HonorsRoute,
+  HowRoute: HowRoute,
   LoginRoute: LoginRoute,
   NewRoute: NewRoute,
   ReportRoute: ReportRoute,
@@ -287,6 +410,9 @@ const rootRouteChildren: RootRouteChildren = {
   ScoreRoute: ScoreRoute,
   SubmitRoute: SubmitRoute,
   FighterIdRoute: FighterIdRoute,
+  PlaySlugRoute: PlaySlugRoute,
+  PrintIdRoute: PrintIdRoute,
+  RoomSlugRoute: RoomSlugRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
 }
 export const routeTree = rootRouteImport
