@@ -83,6 +83,27 @@ function toSql(run: Run): Sql {
   return sql;
 }
 
+
+function pgPoolOptions(url: string) {
+  let hostname = "";
+  try {
+    hostname = new URL(url).hostname;
+  } catch {
+    throw new Error(
+      "DATABASE_URL is not a postgres URL. Open the Postgres service → Connect → copy Internal Database URL (the long postgresql:// line) and paste the whole thing.",
+    );
+  }
+  if (!hostname || hostname === "base" || hostname === "HOST" || hostname === "localhost") {
+    throw new Error(
+      `DATABASE_URL host is "${hostname || "(empty)"}" — that is not your Render database. Open Postgres → Connect → copy Internal Database URL and replace the whole value.`,
+    );
+  }
+  const ssl = hostname.endsWith("render.com") || /sslmode=require/i.test(url)
+    ? { rejectUnauthorized: false as const }
+    : undefined;
+  return { connectionString: url, ssl };
+}
+
 function createNeonSql(): Promise<Sql> {
   globalRef.__pgSqlPromise__ ??= (async () => {
     // Regular Postgres driver: node-postgres (`pg`) — works directly with Neon's
@@ -91,7 +112,7 @@ function createNeonSql(): Promise<Sql> {
     types.setTypeParser(OID_INT8, Number);
     types.setTypeParser(OID_DATE, identity);
     types.setTypeParser(OID_INTERVAL, identity);
-    const pool = new Pool({ connectionString: databaseUrl });
+    const pool = new Pool(pgPoolOptions(databaseUrl));
     return toSql(async <T>(text: string, params: unknown[]) => {
       const res = await pool.query(text, params);
       return res.rows as T[];
