@@ -80,12 +80,31 @@ Add a **PostgreSQL** database on Render in Oregon first. Then add these environm
 | --- | --- |
 | `DATABASE_URL` | Internal Database URL from that Postgres |
 | `BETTER_AUTH_SECRET` | Click Generate, or paste a long random string |
-| `BETTER_AUTH_URL` | `https://gf-rumble.onrender.com` (your live URL, no trailing slash) |
-| `VITE_PUBLIC_HOSTNAME` | `gf-rumble.onrender.com` (host only) |
+| `BETTER_AUTH_URL` | `https://thewatermangames.live` (no trailing slash) |
+| `VITE_PUBLIC_HOSTNAME` | `thewatermangames.live` (host only) |
 | `NODE_VERSION` | `22` |
 | `NITRO_HOST` | `0.0.0.0` |
 
 Without `DATABASE_URL` the locker empties on every restart. Do not skip the database.
+
+### Point thewatermangames.live at Render
+
+Ignore **Edit Website** / **Publish Site** on the GoDaddy builder. That rafting page is not the rumble.
+
+1. Finish the Render web service first (`gf-rumble` or whatever you named it).
+2. On Render: **Settings → Custom Domains → Add** `thewatermangames.live`.
+3. On GoDaddy: open the **domain** (not the website builder) → **DNS**.
+4. Delete any old **A**, **CNAME**, **AAAA**, or forwarding records for `@` and `www`.
+5. Add:
+
+   | Type | Name / Host | Value |
+   | --- | --- | --- |
+   | A | `@` | `216.24.57.1` |
+   | CNAME | `www` | `gf-rumble.onrender.com` (your Render URL, no https) |
+
+6. Back on Render, click **Verify**. Wait a few minutes. HTTPS is automatic.
+7. Set `BETTER_AUTH_URL` and `VITE_PUBLIC_HOSTNAME` as above, then **Manual Deploy** so they take effect.
+
 
 
 1. Fork or clone this repo.
