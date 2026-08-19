@@ -13,7 +13,7 @@ Commissioner work (add a hire, lock a week, close a week) happens on **Desk** wi
 1. Fork or branch from `main`.
 2. `npm install` then `npm run dev`.
 3. Keep scoring open to anyone when the week is `open`. Do not put a password on the scoresheet.
-4. Desk / lock / seed / advance stay behind `DESK_PIN` (`cogs` unless changed).
+4. Desk / lock / seed / advance stay behind the `DESK_PIN` env var. Set it in your local `.env` (see `.env.example`) — with none set, desk actions are disabled.
 5. `npm run typecheck` before you open a pull request.
 
 ## Shared production locker

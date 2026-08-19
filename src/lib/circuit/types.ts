@@ -240,5 +240,3 @@ export const DEFAULT_METRICS = [
 export function weekAcceptsScores(status: string) {
   return status === "open" || status === "upcoming";
 }
-
-export const DESK_PIN = "cogs";

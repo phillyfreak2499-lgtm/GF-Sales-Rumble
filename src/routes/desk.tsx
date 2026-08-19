@@ -57,7 +57,19 @@ function DeskPage() {
   const { user, isPending: authPending } = useCurrentUserState();
   const [tab, setTab] = useState<"week" | "roster" | "codes" | "academy" | "seeds" | "jobs" | "house" | "settings">("week");
   const [pin, setPin] = useState("");
-  const [open, setOpen] = useState(() => deskUnlocked());
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    const saved = readDeskPin();
+    if (!saved) return;
+    let cancelled = false;
+    deskUnlocked(saved).then((ok) => {
+      if (!cancelled) setOpen(ok);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   if (isPending || !board) {
     return (
@@ -113,10 +125,10 @@ function DeskPage() {
 
       <form
         className="mt-6 flex max-w-lg flex-col gap-2 rounded-lg border border-line bg-surface p-4 sm:flex-row sm:items-end"
-        onSubmit={(e) => {
+        onSubmit={async (e) => {
           e.preventDefault();
           writeDeskPin(pin);
-          if (deskUnlocked(pin)) {
+          if (await deskUnlocked(pin)) {
             setOpen(true);
             toast.success("Desk unlocked.");
           } else {

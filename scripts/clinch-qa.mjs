@@ -2,6 +2,11 @@ import { chromium } from "playwright";
 
 const base = process.argv[2] || "http://127.0.0.1:8080";
 const shot = (name) => `/workspace/screenshots/${name}`;
+// Must match the DESK_PIN the server under test was started with.
+const deskPin = process.env.DESK_PIN;
+if (!deskPin) {
+  throw new Error("Set DESK_PIN to the value the target server is running with before running this QA script.");
+}
 
 const browser = await chromium.launch({
   headless: true,
@@ -39,7 +44,7 @@ await run("home-locker", { width: 1280, height: 800 }, async (page) => {
 
 await run("desk-unlock-and-reset", { width: 1280, height: 900 }, async (page) => {
   await page.goto(`${base}/desk`, { waitUntil: "networkidle" });
-  await page.locator("#desk-pin").fill("cogs");
+  await page.locator("#desk-pin").fill(deskPin);
   await page.getByRole("button", { name: "Unlock desk" }).click();
   await page.getByText("Desk unlocked.").waitFor({ timeout: 8000 });
   await page.getByRole("button", { name: "Reset locker" }).click();
@@ -59,7 +64,7 @@ await run("add-new-hire", { width: 1280, height: 800 }, async (page) => {
   await page.goto(`${base}/desk`, { waitUntil: "networkidle" });
   const pin = page.locator("#desk-pin");
   if (await pin.count()) {
-    await pin.fill("cogs");
+    await pin.fill(deskPin);
     const unlock = page.getByRole("button", { name: /Unlock desk|Re-lock check/ });
     await unlock.click();
     await page.waitForTimeout(400);
@@ -81,7 +86,7 @@ await run("open-week-and-score", { width: 1280, height: 900 }, async (page) => {
   await page.goto(`${base}/desk`, { waitUntil: "networkidle" });
   const pin = page.locator("#desk-pin");
   if (await pin.count()) {
-    await pin.fill("cogs");
+    await pin.fill(deskPin);
     await page.getByRole("button", { name: /Unlock desk|Re-lock check/ }).click();
     await page.waitForTimeout(400);
   }
@@ -100,7 +105,7 @@ await run("open-week-and-score", { width: 1280, height: 900 }, async (page) => {
 
 await run("lock-week", { width: 1280, height: 800 }, async (page) => {
   await page.goto(`${base}/desk`, { waitUntil: "networkidle" });
-  await page.locator("#desk-pin").fill("cogs");
+  await page.locator("#desk-pin").fill(deskPin);
   await page.getByRole("button", { name: /Unlock desk|Re-lock check/ }).click();
   await page.waitForTimeout(400);
   await page.getByRole("button", { name: "Lock scores" }).click();

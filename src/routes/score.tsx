@@ -10,8 +10,7 @@ import { Input, Label } from "@/components/ui/input";
 import { PageHead, RingCard } from "@/components/arena/ring";
 import { useBoard } from "@/lib/use-board";
 import { lookupClaim } from "@/lib/server/circuit";
-import { DESK_PIN } from "@/lib/circuit/types";
-import { writeDeskPin, readDeskPin } from "@/lib/circuit/desk-pin";
+import { deskUnlocked, writeDeskPin, readDeskPin } from "@/lib/circuit/desk-pin";
 import type { BoardPayload } from "@/lib/server/circuit";
 import type { Fighter } from "@/lib/circuit/types";
 import { normalizePasscode } from "@/lib/circuit/passcode";
@@ -67,7 +66,7 @@ function ScorePage() {
   async function openGate(e: React.FormEvent) {
     e.preventDefault();
     const raw = code.trim();
-    if (raw.toLowerCase() === DESK_PIN) {
+    if (await deskUnlocked(raw)) {
       writeDeskPin(raw);
       setDeskOpen(true);
       setFound(null);

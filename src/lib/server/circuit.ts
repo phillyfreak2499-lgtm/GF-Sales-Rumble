@@ -20,7 +20,7 @@ import { NICKNAME_BANK } from "@/lib/circuit/seed-roster";
 import { generatePersona } from "@/lib/circuit/copy";
 import {
   DEFAULT_METRICS,
-  DESK_PIN,
+  STATUS_ORDER,
   weekAcceptsScores,
   type BracketId,
   type Circuit,
@@ -88,10 +88,39 @@ async function loadCircuitById(id: string) {
   return rows[0] ? mapCircuit(rows[0]) : null;
 }
 
+// Server-only: never imported by client code, so this never reaches the
+// browser bundle. Unset (not "cogs") on purpose — an operator must set a real
+// value before commissioner actions work. See DESK_PIN in .env.example.
+const DESK_PIN = (process.env.DESK_PIN ?? "").trim().toLowerCase();
+
+function matchesDeskPin(candidate?: string) {
+  if (!DESK_PIN) return false;
+  return (candidate ?? "").trim().toLowerCase() === DESK_PIN;
+}
+
 function assertCanWrite(circuit: Circuit, userId: string | null, pin?: string) {
-  if ((pin ?? "").trim().toLowerCase() === DESK_PIN) return;
+  if (matchesDeskPin(pin)) return;
   if (userId && circuit.ownerUserId === userId) return;
   throw new Error("Enter the commissioner password to do that.");
+}
+
+const VALID_STATUSES = new Set<MetricStatus>(STATUS_ORDER);
+
+async function assertValidCard(
+  sql: Awaited<ReturnType<typeof getSql>>,
+  circuitId: string,
+  statuses: MetricStatus[],
+) {
+  const metricCount =
+    (
+      await sql<{ c: number }>`select count(*)::int as c from metrics where circuit_id = ${circuitId}`
+    )[0]?.c ?? DEFAULT_METRICS.length;
+  if (!Array.isArray(statuses) || statuses.length !== metricCount) {
+    throw new Error("That card does not match this circuit's metrics.");
+  }
+  if (!statuses.every((s) => VALID_STATUSES.has(s))) {
+    throw new Error("That card has an invalid status.");
+  }
 }
 
 async function ensureNicePasscodes(circuitId: string) {
@@ -1006,6 +1035,7 @@ export const submitScore = createServerFn({ method: "POST" })
           : "This week is not open for cards.",
       );
     }
+    await assertValidCard(sql, circuit.id, data.statuses);
     const reviews = Math.max(0, Math.min(3, Math.floor(data.reviews)));
     const existing = (
       await sql<{ id: string }>`
@@ -1074,6 +1104,7 @@ export const submitScoresBatch = createServerFn({ method: "POST" })
       );
     }
     for (const row of data.rows) {
+      await assertValidCard(sql, circuit.id, row.statuses);
       const reviews = Math.max(0, Math.min(3, Math.floor(row.reviews)));
       const existing = (
         await sql<{ id: string }>`
@@ -1546,7 +1577,7 @@ export const rewriteStory = createServerFn({ method: "POST" })
 export const resetDemo = createServerFn({ method: "POST" })
   .validator((d: { pin?: string } | undefined) => d ?? {})
   .handler(async ({ data }) => {
-    if ((data.pin ?? "").trim().toLowerCase() !== DESK_PIN) {
+    if (!matchesDeskPin(data.pin)) {
       throw new Error("Enter the commissioner password to do that.");
     }
     const sql = await getSql();
@@ -1554,6 +1585,10 @@ export const resetDemo = createServerFn({ method: "POST" })
     const circuit = await loadCircuitBySlug(DEMO_SLUG);
     return buildBoard(circuit!);
   });
+
+export const verifyDeskPin = createServerFn({ method: "POST" })
+  .validator((d: { pin: string }) => d)
+  .handler(async ({ data }) => matchesDeskPin(data.pin));
 
 export const lookupClaim = createServerFn({ method: "GET" })
   .validator((d: { code: string }) => d)

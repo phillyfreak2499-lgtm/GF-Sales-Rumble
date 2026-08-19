@@ -1,4 +1,4 @@
-import { DESK_PIN } from "./types";
+import { verifyDeskPin } from "@/lib/server/circuit";
 
 const KEY = "clinch-desk-pin";
 
@@ -29,6 +29,14 @@ export function clearDeskPin() {
   }
 }
 
-export function deskUnlocked(pin = readDeskPin()) {
-  return pin.trim().toLowerCase() === DESK_PIN;
+// The real PIN never reaches the client — this asks the server to check the
+// entered guess instead of comparing against a bundled constant.
+export async function deskUnlocked(pin = readDeskPin()): Promise<boolean> {
+  const trimmed = pin.trim();
+  if (!trimmed) return false;
+  try {
+    return await verifyDeskPin({ data: { pin: trimmed } });
+  } catch {
+    return false;
+  }
 }

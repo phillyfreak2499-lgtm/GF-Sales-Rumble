@@ -125,9 +125,11 @@ function authPopupPlugin(): Plugin {
 
 function nitroPreset() {
   if (process.env.NITRO_PRESET) return process.env.NITRO_PRESET;
-  // Render (and any long-running Node host) needs the node server, not Vercel.
-  if (process.env.RENDER === "true") return "node-server";
-  return "vercel";
+  // Vercel sets this on every build automatically. Every other host (Render,
+  // a bare `npm start`, etc.) needs the node-server preset so the build
+  // produces `.output/server/index.mjs`, which `npm start` expects.
+  if (process.env.VERCEL) return "vercel";
+  return "node-server";
 }
 
 // `0.0.0.0:8080` is the live-preview contract — don't change host/port.

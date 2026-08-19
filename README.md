@@ -16,7 +16,7 @@ Repo: [github.com/phillyfreak2499-lgtm/GF-Sales-Rumble](https://github.com/phill
 | --- | --- | --- |
 | Specialists | Open **Locker**, enter their passcode, mark the card, play academy and floor games | Personal passcode |
 | Any store | Open locker rooms, read the card, bouts, and gazette | None to browse |
-| Commissioner | Add / remove people, seed, lock a week, house calls, theme | `cogs` (desk) |
+| Commissioner | Add / remove people, seed, lock a week, house calls, theme | Desk password (set via `DESK_PIN`) |
 
 Every passcode lives on the **Desk → Codes** tab.
 
@@ -82,6 +82,7 @@ Add a **PostgreSQL** database on Render in Oregon first. Then add these environm
 | `BETTER_AUTH_SECRET` | Click Generate, or paste a long random string |
 | `BETTER_AUTH_URL` | `https://thewatermangames.live` (no trailing slash) |
 | `VITE_PUBLIC_HOSTNAME` | `thewatermangames.live` (host only) |
+| `DESK_PIN` | A long, unique commissioner password — pick your own, do not reuse `cogs` |
 | `NODE_VERSION` | `22` |
 | `NITRO_HOST` | `0.0.0.0` |
 | `NPM_CONFIG_PRODUCTION` | `false` |
@@ -119,10 +120,10 @@ Ignore **Edit Website** / **Publish Site** on the GoDaddy builder. That rafting 
    | `BETTER_AUTH_SECRET` | A long random string |
    | `BETTER_AUTH_URL` | The live site URL, e.g. `https://your-app.vercel.app` |
    | `VITE_PUBLIC_HOSTNAME` | Host only, e.g. `your-app.vercel.app` |
+   | `DESK_PIN` | A long, unique commissioner password |
 
 5. Deploy. `npm run build` also runs `npm run db:migrate` and applies `migrations/`.
 6. Send every store the same URL. Specialists open **Locker** with their passcode.
-7. Change `DESK_PIN` in `src/lib/circuit/types.ts` before go-live if you do not want `cogs`.
 
 Without `DATABASE_URL`, the app falls back to an in-memory PGLite database. That is fine for a local demo and **not** fine for a shared production locker — each serverless instance would forget the scores.
 
@@ -143,7 +144,7 @@ npm run build
 
 ## Commissioner password
 
-Desk actions (add people, lock, advance, reset) require the password **`cogs`**. Change `DESK_PIN` in `src/lib/circuit/types.ts` before you go live if you want a different one.
+Desk actions (add people, lock, advance, reset) require the password set in the `DESK_PIN` environment variable (see `.env.example`). It is checked server-side only and is never sent to the browser. With no `DESK_PIN` set, desk actions are disabled — set one in your `.env` for local dev and in your host's environment variables for production.
 
 ## Project shape
 
