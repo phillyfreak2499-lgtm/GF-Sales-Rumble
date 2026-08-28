@@ -179,6 +179,9 @@ export function beltOf(
 export function weekJobs(fighterId: string, week: number, work: FloorWorkRow[], extras: FloorTaskDef[] = []) {
   const byId: Record<string, FloorTaskDef> = { ...TASK_BY_ID };
   for (const t of extras) byId[t.id] = t;
+  // The floor_work select has no ORDER BY, so checked rows drift in the raw
+  // result; pin the list to catalog order so jobs never jump around on click.
+  const rank = new Map([...FLOOR_TASKS, ...extras].map((t, i) => [t.id, i]));
   return work
     .filter((w) => w.fighterId === fighterId && w.weekNumber === week)
     .map((w) => ({
@@ -191,7 +194,8 @@ export function weekJobs(fighterId: string, week: number, work: FloorWorkRow[], 
         pack: "ops" as const,
         live: true,
       },
-    }));
+    }))
+    .sort((a, b) => (rank.get(a.taskId) ?? 999) - (rank.get(b.taskId) ?? 999));
 }
 
 export function itemToPlateValue(item: BeltItem) {

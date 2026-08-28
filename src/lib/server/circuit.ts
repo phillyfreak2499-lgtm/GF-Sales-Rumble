@@ -1841,15 +1841,29 @@ async function ensureFloorWork(sql: Awaited<ReturnType<typeof getSql>>, circuit:
   `;
   const have = new Set(existing.map((r) => `${r.fighter_id}:${r.task_id}`));
   const jobs = liveTasks(extras);
+  const missing: Array<{ fighterId: string; task: FloorTaskDef }> = [];
   for (const f of fighters) {
     for (const task of jobs) {
-      if (have.has(`${f.id}:${task.id}`)) continue;
-      await sql`
-        insert into floor_work (id, circuit_id, fighter_id, week_number, task_id, stars, done)
-        values (${nid("fw")}, ${circuit.id}, ${f.id}, ${circuit.currentWeek}, ${task.id}, ${task.stars}, ${false})
-        on conflict (fighter_id, week_number, task_id) do nothing
-      `;
+      if (!have.has(`${f.id}:${task.id}`)) missing.push({ fighterId: f.id, task });
     }
+  }
+  // Whole roster × whole catalog can be hundreds of rows; insert in batches so
+  // the first board load of a week is not hundreds of network round-trips.
+  const chunkSize = 200;
+  for (let i = 0; i < missing.length; i += chunkSize) {
+    const chunk = missing.slice(i, i + chunkSize);
+    const params: unknown[] = [];
+    const rows = chunk.map(({ fighterId, task }) => {
+      const base = params.length;
+      params.push(nid("fw"), circuit.id, fighterId, circuit.currentWeek, task.id, task.stars);
+      return `($${base + 1}, $${base + 2}, $${base + 3}, $${base + 4}, $${base + 5}, $${base + 6}, false)`;
+    });
+    await sql.query(
+      `insert into floor_work (id, circuit_id, fighter_id, week_number, task_id, stars, done)
+       values ${rows.join(", ")}
+       on conflict (fighter_id, week_number, task_id) do nothing`,
+      params,
+    );
   }
 }
 
