@@ -1615,7 +1615,7 @@ export const completeTraining = createServerFn({ method: "POST" })
     const circuit = await loadCircuitById(fighter.circuitId);
     if (!circuit) throw new Error("Circuit not found.");
     const mod = moduleById(data.moduleId);
-    if (!mod) throw new Error("That film is not on the card.");
+    if (!mod) throw new Error("That training is not on the card.");
     const answers = data.answers.slice(0, mod.questions.length).map((n) => Math.floor(Number(n)));
     const raw = gradeQuiz(mod.id, answers);
     const weekNumber = mod.weekNumber ?? 0;

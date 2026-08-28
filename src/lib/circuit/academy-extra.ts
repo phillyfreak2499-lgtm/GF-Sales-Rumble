@@ -1,12 +1,12 @@
 import type { TrainingModule } from "./training";
 
-/** Extra weekly films. Four lessons a week, sixteen on the card. */
+/** Extra weekly trainings. Four lessons a week, sixteen on the card. */
 export const EXTRA_WEEKLY: TrainingModule[] = [
   {
     id: "week-1-fit",
     weekNumber: 1,
     title: "Fit on the Foot",
-    kicker: "Week 1 · film 2 of 4",
+    kicker: "Week 1 · training 2 of 4",
     opener:
       "Brannock is a starting point. The foot on the support is the finish. Too long and too short hurt in different places. Learn both so you do not guess.",
     slides: [
@@ -101,7 +101,7 @@ export const EXTRA_WEEKLY: TrainingModule[] = [
     id: "week-1-lineup",
     weekNumber: 1,
     title: "The Lineup",
-    kicker: "Week 1 · film 3 of 4",
+    kicker: "Week 1 · training 3 of 4",
     opener:
       "Seventeen styles. Three jobs. If you cannot name which Strengthener is most popular and which one flexes, you are guessing on the foot.",
     slides: [
@@ -187,7 +187,7 @@ export const EXTRA_WEEKLY: TrainingModule[] = [
     id: "week-1-features",
     weekNumber: 1,
     title: "What the Features Do",
-    kicker: "Week 1 · film 4 of 4",
+    kicker: "Week 1 · training 4 of 4",
     opener:
       "Clients do not buy a polymer shape. They buy what the feature does for the body. Heel cup. Met rise. Heel platform. Name the job.",
     slides: [
@@ -277,7 +277,7 @@ export const EXTRA_WEEKLY: TrainingModule[] = [
     id: "week-2-cart",
     weekNumber: 2,
     title: "The Cart Is the Price",
-    kicker: "Week 2 · film 2 of 4",
+    kicker: "Week 2 · training 2 of 4",
     opener:
       "Highest leverage on perceived value is not the close. It is how you handle the cart. A messy cart makes a $525 support feel like a $20 insole.",
     slides: [
@@ -358,7 +358,7 @@ export const EXTRA_WEEKLY: TrainingModule[] = [
     id: "week-2-presence",
     weekNumber: 2,
     title: "The First Sixty Seconds",
-    kicker: "Week 2 · film 3 of 4",
+    kicker: "Week 2 · training 3 of 4",
     opener:
       "The store sets the price in ten seconds. You set the rest in the first minute. Appearance, presence, and how you walk them in.",
     slides: [
@@ -434,7 +434,7 @@ export const EXTRA_WEEKLY: TrainingModule[] = [
     id: "week-2-followup",
     weekNumber: 2,
     title: "Follow-Up Is the Second Sale",
-    kicker: "Week 2 · film 4 of 4",
+    kicker: "Week 2 · training 4 of 4",
     opener:
       "Non-tangible value does not end at the door. A personal check-in is how one sale becomes reviews and referrals. Scripted follow-up feels like a survey.",
     slides: [
@@ -505,7 +505,7 @@ export const EXTRA_WEEKLY: TrainingModule[] = [
     id: "week-3-first-why",
     weekNumber: 3,
     title: "Start With Why They Came In",
-    kicker: "Week 3 · film 2 of 4",
+    kicker: "Week 3 · training 2 of 4",
     opener:
       "Not what they want. Why they walked through the door. The first Why is the one that keeps value standing when the first close does not land.",
     slides: [
@@ -576,7 +576,7 @@ export const EXTRA_WEEKLY: TrainingModule[] = [
     id: "week-3-customize",
     weekNumber: 3,
     title: "Customize Without Stripping",
-    kicker: "Week 3 · film 3 of 4",
+    kicker: "Week 3 · training 3 of 4",
     opener:
       "The first close missed. Most people start taking things off the card. Both sides of the equation shrink. YYY lets you customize so they still feel they got the thing they came for.",
     slides: [
@@ -657,7 +657,7 @@ export const EXTRA_WEEKLY: TrainingModule[] = [
     id: "week-3-listen",
     weekNumber: 3,
     title: "They Should Talk More",
-    kicker: "Week 3 · film 4 of 4",
+    kicker: "Week 3 · training 4 of 4",
     opener:
       "Whoever asks the questions controls the conversation. The client should speak more than you. A fast no is the most common way to drop an opportunity on the floor.",
     slides: [
@@ -732,7 +732,7 @@ export const EXTRA_WEEKLY: TrainingModule[] = [
     id: "week-4-components",
     weekNumber: 4,
     title: "Every Piece Has a Job",
-    kicker: "Week 4 · film 2 of 4",
+    kicker: "Week 4 · training 2 of 4",
     opener:
       "We do not present a product and then upsell. We present one complete solution. Name the job of Brooks, OS1st, Med Massager, and Architek — not the line item.",
     slides: [
@@ -818,7 +818,7 @@ export const EXTRA_WEEKLY: TrainingModule[] = [
     id: "week-4-language",
     weekNumber: 4,
     title: "Words That Kill the Ticket",
-    kicker: "Week 4 · film 3 of 4",
+    kicker: "Week 4 · training 3 of 4",
     opener:
       "Add-on. Accessory. Extra. Upsell. Those words tell the client there is a real product… and then some optional stuff hanging off it. Change the words or the hierarchy is already lost.",
     slides: [
@@ -898,7 +898,7 @@ export const EXTRA_WEEKLY: TrainingModule[] = [
     id: "week-4-chair",
     weekNumber: 4,
     title: "Get Them in the Chair",
-    kicker: "Week 4 · film 4 of 4",
+    kicker: "Week 4 · training 4 of 4",
     opener:
       "Somebody walks in asking for a thing we do not stock. That is not a no. First job is the chair. Then questions. Then a print. Do not rush the sale.",
     slides: [

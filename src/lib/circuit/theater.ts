@@ -11,9 +11,9 @@ const TAPES = [
   },
   {
     kicker: "Tuesday tape",
-    line: "Film day. Four academies. Pass one for a point on the card.",
+    line: "Training day. Four academies. Pass one for a point on the card.",
     to: "/score" as const,
-    cta: "Watch the film",
+    cta: "Open the academy",
   },
   {
     kicker: "Wednesday tape",

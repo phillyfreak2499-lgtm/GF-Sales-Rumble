@@ -121,7 +121,7 @@ export const BADGE_CATALOG: BadgeDef[] = [
   { id: "the-work", name: "The Work", blurb: "Ten greens or more this period." },
   { id: "opening-bell", name: "Opening Bell", blurb: "Posted a card in week 1." },
   { id: "perfect-period", name: "Perfect Period", blurb: "A sweep in every completed week." },
-  { id: "blue-track", name: "Blue Track", blurb: "Two weekly film-study quizzes in the book." },
+  { id: "blue-track", name: "Blue Track", blurb: "Two weekly academy quizzes in the book." },
   { id: "full-syllabus", name: "Full Syllabus", blurb: "All four weekly academies in the book." },
 ];
 
@@ -578,7 +578,7 @@ export function missionsFor(
   const hitAcademy: Mission = {
     id: "academy",
     title: "Hit the academy",
-    blurb: "Pass this week’s film-study quiz for +1 on the card.",
+    blurb: "Pass this week’s academy quiz for +1 on the card.",
     have: academyHit ? 1 : 0,
     need: 1,
     done: academyHit,

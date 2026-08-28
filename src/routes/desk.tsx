@@ -404,7 +404,7 @@ function AcademyDesk({ board }: { board: BoardPayload }) {
   return (
     <div className="mt-8 space-y-6">
       <p className="text-sm text-muted">
-        Four films a week. The first pass while scores are open is +1 on that week’s card. The
+        Four trainings a week. The first pass while scores are open is +1 on that week’s card. The
         other three are still required work. Locker games are practice. The quiz grades itself.
       </p>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">

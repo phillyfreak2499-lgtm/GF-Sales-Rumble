@@ -620,7 +620,7 @@ export const LOCKER_GAMES: TrainingModule[] = [
     title: "Complete Solution",
     kicker: "Locker game · no bonus point",
     opener:
-      "A partial solution is an incomplete solution. Nobody takes half a prescription. This is film study on language — how we talk about Brooks, OS1st, Med Massager, and Architek as one system.",
+      "A partial solution is an incomplete solution. Nobody takes half a prescription. This is training on language — how we talk about Brooks, OS1st, Med Massager, and Architek as one system.",
     slides: [
       {
         title: "Language creates the hierarchy",
@@ -801,7 +801,7 @@ export function weeklyModule(weekNumber: number) {
 
 export function gradeQuiz(moduleId: string, answers: number[]) {
   const mod = moduleById(moduleId);
-  if (!mod) throw new Error("That film is not on the card.");
+  if (!mod) throw new Error("That training is not on the card.");
   const total = mod.questions.length;
   let correct = 0;
   const mark = mod.questions.map((q, i) => {

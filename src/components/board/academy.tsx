@@ -6,7 +6,6 @@ import {
   Check,
   ChevronLeft,
   ChevronRight,
-  Clapperboard,
   Gamepad2,
   GraduationCap,
 } from "lucide-react";
@@ -91,10 +90,10 @@ export function Academy({
             <GraduationCap className="size-6" />
           </span>
           <div className="min-w-0">
-            <p className="kicker">Film study · Blue Track</p>
+            <p className="kicker">Training · Blue Track</p>
             <h2 className="mt-1 font-display text-3xl italic leading-none">The academy</h2>
             <p className="mt-2 text-sm leading-relaxed text-muted">
-              Four films every week — sixteen on the card. Pass one this week for +1. Finish the
+              Four trainings every week — sixteen on the card. Pass one this week for +1. Finish the
               other three so the locker stays sharp. Floor games are extra practice.
             </p>
           </div>
@@ -115,7 +114,7 @@ export function Academy({
         <div className="space-y-8">
           <div>
             <p className="kicker">This period</p>
-            <h3 className="mb-3 mt-2 font-display text-2xl italic">Weekly film</h3>
+            <h3 className="mb-3 mt-2 font-display text-2xl italic">Weekly training</h3>
             <div className="space-y-6">
               {[1, 2, 3, 4].map((w) => {
                 const mods = modulesForWeek(w);
@@ -218,11 +217,11 @@ function ModuleTile({
       </div>
       <p className="mt-2 font-display text-2xl italic leading-tight">{module.title}</p>
       <p className="mt-2 flex items-center gap-2 text-sm text-muted">
-        {module.weekNumber ? <Clapperboard className="size-3.5" /> : <BookOpen className="size-3.5" />}
+        <BookOpen className="size-3.5" />
         {record?.passed
           ? `${record.correct}/${record.total}${record.awarded ? " · +1 banked" : ""}`
           : module.weekNumber
-            ? "Watch and take the quiz"
+            ? "Read it, then take the quiz"
             : "Practice only"}
       </p>
     </button>
@@ -257,7 +256,7 @@ function ModulePlay({
       completeTraining({ data: d }),
   });
 
-  const reel = module.slides[slide];
+  const part = module.slides[slide];
   const question = module.questions[qIndex];
   const grantsBonus = module.weekNumber === currentWeek && bonusLive && !record?.awarded;
 
@@ -286,7 +285,7 @@ function ModulePlay({
           } else if (res.grade.passed) {
             toast.success(module.weekNumber ? "Passed." : "Practice complete. No bonus on locker quizzes.");
           } else {
-            toast.error("Not enough. Watch it again.");
+            toast.error("Not enough. Run it again.");
           }
         },
         onError: (err) => toast.error(err.message),
@@ -310,13 +309,13 @@ function ModulePlay({
       {phase === "slides" ? (
         <div className="mt-6">
           <p className="kicker">
-            Reel {slide + 1} / {module.slides.length}
+            Part {slide + 1} / {module.slides.length}
           </p>
-          <h4 className="mt-2 font-display text-2xl italic">{reel.title}</h4>
-          <p className="mt-3 text-sm leading-relaxed text-muted">{reel.body}</p>
-          {reel.points?.length ? (
+          <h4 className="mt-2 font-display text-2xl italic">{part.title}</h4>
+          <p className="mt-3 text-sm leading-relaxed text-muted">{part.body}</p>
+          {part.points?.length ? (
             <ul className="mt-4 space-y-2 text-sm text-fg">
-              {reel.points.map((p) => (
+              {part.points.map((p) => (
                 <li key={p} className="flex gap-2">
                   <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-bone" />
                   {p}

@@ -141,7 +141,7 @@ const LOCKER_TABS = [
   {
     label: "Academy",
     icon: BookOpen,
-    blurb: "Four films this week. Watch, then take the quiz. Pass one for +1 on the card. Finish the other three so you stay sharp.",
+    blurb: "Four trainings this week. Work through one, then take the quiz. Pass one for +1 on the card. Finish the other three so you stay sharp.",
   },
   {
     label: "Stats",
@@ -185,7 +185,7 @@ const DESK_TABS = [
   },
   {
     label: "Academy",
-    blurb: "Who passed which week. 2/4 +1 means they banked the bonus and still have film left.",
+    blurb: "Who passed which week. 2/4 +1 means they banked the bonus and still have trainings left.",
   },
   {
     label: "Seeds",
@@ -293,7 +293,7 @@ function HowPage() {
                 <span className="text-fg">Reviews.</span> Each named five-star is +1. Three max.
               </li>
               <li>
-                <span className="text-fg">Academy.</span> Four films every week. Pass one for +1. Floor games live under Play.
+                <span className="text-fg">Academy.</span> Four trainings every week. Pass one for +1. Floor games live under Play.
               </li>
               <li>
                 <span className="text-fg">Stars.</span> Every floor job, every week. Check them off. Spend them on Belt.
@@ -470,7 +470,7 @@ function HowPage() {
           <p className="kicker">A normal week in the locker</p>
           <ol className="mt-4 space-y-3 text-sm leading-relaxed text-muted">
             <li>
-              <span className="text-fg">1. Academy.</span> Watch this week’s films. Pass one quiz. +1 lands on the card. Scroll to Floor games for Showdown, Keep the Client, Roleplay, Case File, Fit Clue, ArchQuest, and Floor Commander.
+              <span className="text-fg">1. Academy.</span> Work through this week’s trainings. Pass one quiz. +1 lands on the card. Scroll to Floor games for Showdown, Keep the Client, Roleplay, Case File, Fit Clue, ArchQuest, and Floor Commander.
               card.
               card.
             </li>
