@@ -42,7 +42,7 @@ import {
   FREE_ITEMS,
   beltOf,
   itemToPlateValue,
-  pickWeekTasks,
+  liveTasks,
   type FloorTaskDef,
   type TaskPack,
 } from "@/lib/circuit/floor-work";
@@ -1835,15 +1835,15 @@ async function ensureFloorWork(sql: Awaited<ReturnType<typeof getSql>>, circuit:
   const fighters = await sql<{ id: string }>`
     select id from fighters where circuit_id = ${circuit.id} and departed = false
   `;
-  const existing = await sql<{ fighter_id: string }>`
-    select distinct fighter_id from floor_work
+  const existing = await sql<{ fighter_id: string; task_id: string }>`
+    select fighter_id, task_id from floor_work
     where circuit_id = ${circuit.id} and week_number = ${circuit.currentWeek}
   `;
-  const have = new Set(existing.map((r) => r.fighter_id));
+  const have = new Set(existing.map((r) => `${r.fighter_id}:${r.task_id}`));
+  const jobs = liveTasks(extras);
   for (const f of fighters) {
-    if (have.has(f.id)) continue;
-    const picks = pickWeekTasks(f.id, circuit.currentWeek, extras, 4);
-    for (const task of picks) {
+    for (const task of jobs) {
+      if (have.has(`${f.id}:${task.id}`)) continue;
       await sql`
         insert into floor_work (id, circuit_id, fighter_id, week_number, task_id, stars, done)
         values (${nid("fw")}, ${circuit.id}, ${f.id}, ${circuit.currentWeek}, ${task.id}, ${task.stars}, ${false})

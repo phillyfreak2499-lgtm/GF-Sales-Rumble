@@ -86,53 +86,6 @@ export function liveTasks(extras: FloorTaskDef[] = []) {
   return out;
 }
 
-function hashSeed(s: string) {
-  let h = 2166136261;
-  for (let i = 0; i < s.length; i += 1) {
-    h ^= s.charCodeAt(i);
-    h = Math.imul(h, 16777619);
-  }
-  return h >>> 0;
-}
-
-function seededShuffle<T>(list: T[], seed: string) {
-  const pool = [...list];
-  let n = hashSeed(seed);
-  for (let i = pool.length - 1; i > 0; i -= 1) {
-    n = (Math.imul(n, 1664525) + 1013904223) >>> 0;
-    const j = n % (i + 1);
-    const tmp = pool[i];
-    pool[i] = pool[j]!;
-    pool[j] = tmp!;
-  }
-  return pool;
-}
-
-/** Four jobs. Always mixed: one sales, one house, one team, one wild card. */
-export function pickWeekTasks(fighterId: string, week: number, extras: FloorTaskDef[] = [], count = 4): FloorTaskDef[] {
-  const pool = liveTasks(extras);
-  const sales = seededShuffle(pool.filter((t) => t.pack === "sales"), `${fighterId}:${week}:sales`);
-  const ops = seededShuffle(pool.filter((t) => t.pack === "ops"), `${fighterId}:${week}:ops`);
-  const kind = seededShuffle(pool.filter((t) => t.pack === "kind"), `${fighterId}:${week}:kind`);
-  const picked: FloorTaskDef[] = [];
-  const take = (list: FloorTaskDef[]) => {
-    const next = list.find((t) => !picked.some((p) => p.id === t.id));
-    if (next) picked.push(next);
-  };
-  take(sales);
-  take(ops);
-  take(kind);
-  const rest = seededShuffle(
-    pool.filter((t) => !picked.some((p) => p.id === t.id)),
-    `${fighterId}:${week}:wild`,
-  );
-  for (const t of rest) {
-    if (picked.length >= count) break;
-    picked.push(t);
-  }
-  return picked.slice(0, Math.min(count, pool.length));
-}
-
 export const BELT_SHOP: BeltItem[] = [
   { id: "border-bone", slot: "border", name: "House rope", blurb: "The default turnbuckle.", cost: 0, swatch: "bone", tier: "house" },
   { id: "border-sage", slot: "border", name: "Green ring", blurb: "Looks like a sweep.", cost: 3, swatch: "sage", tier: "bright" },

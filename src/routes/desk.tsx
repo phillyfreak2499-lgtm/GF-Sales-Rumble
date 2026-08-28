@@ -1126,8 +1126,8 @@ function JobsDesk({ board }: { board: BoardPayload }) {
         <p className="kicker">Add a job</p>
         <h2 className="font-display text-3xl italic">The pool stays open</h2>
         <p className="text-sm text-muted">
-          Each person gets four random jobs every week: one sales, one house, one team, and one wild
-          card. Add anything you want in the mix.
+          Every job in the pool is on everyone&rsquo;s card every week — sales, house, and team.
+          Add anything you want in the mix.
         </p>
         <div>
           <Label htmlFor="job-title">Job</Label>

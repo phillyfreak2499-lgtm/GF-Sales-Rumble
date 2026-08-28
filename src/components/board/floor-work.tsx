@@ -3,7 +3,7 @@ import { toast } from "sonner";
 import type { BoardPayload } from "@/lib/server/circuit";
 import { completeFloorTask } from "@/lib/server/circuit";
 import { useBoardMutation } from "@/lib/use-board";
-import { beltOf, weekJobs } from "@/lib/circuit/floor-work";
+import { beltOf, weekJobs, PACK_LABEL, type TaskPack } from "@/lib/circuit/floor-work";
 import { pickStarCount } from "@/lib/circuit/crowd";
 import { weekAcceptsScores } from "@/lib/circuit/types";
 import { cn } from "@/lib/utils";
@@ -60,11 +60,18 @@ export function FloorWorkList({
     return <p className="text-sm text-subtle">This week’s jobs print when the locker opens.</p>;
   }
 
+  const groups = (["sales", "ops", "kind"] as TaskPack[])
+    .map((pack) => ({ pack, jobs: jobs.filter((j) => j.def.pack === pack) }))
+    .filter((g) => g.jobs.length > 0);
+
   return (
     <div>
       <StarBelt earned={bank.earned} bank={bank.bank} />
-      <ul className="mt-4 space-y-2">
-        {jobs.map((job) => {
+      {groups.map((group) => (
+        <div key={group.pack}>
+          <p className="mt-4 text-[11px] uppercase tracking-[0.16em] text-subtle">{PACK_LABEL[group.pack]}</p>
+          <ul className="mt-2 space-y-2">
+        {group.jobs.map((job) => {
           const clickable = Boolean(passcode) && open && !save.isPending;
           return (
             <li key={job.taskId}>
@@ -113,7 +120,9 @@ export function FloorWorkList({
             </li>
           );
         })}
-      </ul>
+          </ul>
+        </div>
+      ))}
       {!passcode ? (
         <p className="mt-3 text-xs text-subtle">Open My locker with your passcode to check these off.</p>
       ) : !open ? (

@@ -17,7 +17,7 @@ const TAPES = [
   },
   {
     kicker: "Wednesday tape",
-    line: "Floor jobs. Four stars sitting on the belt if you actually do them.",
+    line: "Floor jobs. A whole board of stars sitting there if you actually do them.",
     to: "/score" as const,
     cta: "This week’s work",
   },
