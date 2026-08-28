@@ -5,7 +5,7 @@ import { formatRecord, recordOf } from "@/lib/circuit/copy";
 import { fighterById } from "@/lib/use-board";
 import { RingCard, Ticket, VsMark } from "@/components/arena/ring";
 import { MicByline } from "@/components/arena/announcer";
-import { Seed } from "./pieces";
+import { BoutVideoLink, Seed } from "./pieces";
 import { PROMO_BY_ID } from "@/lib/circuit/promos";
 
 export function BoutCard({
@@ -67,6 +67,7 @@ export function BoutCard({
       ) : null}
       <PromoTape board={board} matchupId={m.id} week={m.weekNumber} />
       <p className="mt-5 text-sm leading-relaxed text-muted">{copy.body}</p>
+      <BoutVideoLink url={m.videoUrl} />
       <MicByline kind={phase} desk={desk} />
     </RingCard>
   );

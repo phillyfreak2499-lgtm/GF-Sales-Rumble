@@ -199,6 +199,7 @@ export function mapMatchup(r: {
   fighter_ids_json: string;
   winner_id: string | null;
   status: string;
+  video_url?: string | null;
 }): Matchup {
   return {
     id: r.id,
@@ -209,6 +210,7 @@ export function mapMatchup(r: {
     fighterIds: JSON.parse(r.fighter_ids_json) as string[],
     winnerId: r.winner_id,
     status: r.status as MatchupStatus,
+    videoUrl: r.video_url ?? "",
   };
 }
 

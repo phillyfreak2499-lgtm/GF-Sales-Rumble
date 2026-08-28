@@ -27,6 +27,7 @@ export function BoothDemo({
     fighterIds: [a.id, b.id],
     winnerId: null,
     status: "scheduled",
+    videoUrl: "",
   };
   const copy = callBout({
     style,

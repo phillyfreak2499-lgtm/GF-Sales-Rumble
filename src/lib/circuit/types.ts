@@ -190,6 +190,7 @@ export type Matchup = {
   fighterIds: string[];
   winnerId: string | null;
   status: MatchupStatus;
+  videoUrl: string;
 };
 
 export type Placement = {

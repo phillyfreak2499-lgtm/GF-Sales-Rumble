@@ -10,7 +10,7 @@ import { Input, Label, Textarea } from "@/components/ui/input";
 import { MonoMark, Seed } from "@/components/board/pieces";
 import { PhotoField } from "@/components/board/photo-field";
 import { StoreSelect } from "@/components/board/store-select";
-import { weekAcceptsScores } from "@/lib/circuit/types";
+import { BRACKET_LABEL, weekAcceptsScores, type Matchup } from "@/lib/circuit/types";
 import { SITE_THEMES } from "@/lib/circuit/themes";
 import { cn } from "@/lib/utils";
 import {
@@ -35,6 +35,7 @@ import {
   updateSettings,
   postChallenge,
   saveHouseCall,
+  setMatchupVideo,
 } from "@/lib/server/circuit";
 import { onTheBook, useBoard, useBoardMutation } from "@/lib/use-board";
 import { scorecard } from "@/lib/circuit/engine";
@@ -384,6 +385,77 @@ function WeekDesk({ board, canClose, unlocked }: { board: BoardPayload; canClose
                     }}
                   />
                 </div>
+              ) : null}
+            </li>
+          );
+        })}
+      </ul>
+      <BoutVideos board={board} />
+    </div>
+  );
+}
+
+function BoutVideos({ board }: { board: BoardPayload }) {
+  const week = board.circuit.currentWeek;
+  const items = board.matchups.filter((m) => m.weekNumber === week && m.kind !== "bye");
+  const [drafts, setDrafts] = useState<Record<string, string>>({});
+  const save = useBoardMutation((d: Parameters<typeof setMatchupVideo>[0]["data"]) =>
+    setMatchupVideo({ data: d }),
+  );
+  if (!items.length) return null;
+
+  const nameOf = (id: string) => board.fighters.find((f) => f.id === id)?.nickname ?? "—";
+  const labelOf = (m: Matchup) =>
+    m.kind === "rumble"
+      ? `${BRACKET_LABEL[m.bracket]} rumble`
+      : m.fighterIds.map(nameOf).join(" vs ");
+  const submit = (m: Matchup, url: string) => {
+    save.mutate(
+      { slug: board.circuit.slug, matchupId: m.id, url, pin: pinOf() },
+      {
+        onSuccess: () => {
+          setDrafts((d) => {
+            const next = { ...d };
+            delete next[m.id];
+            return next;
+          });
+          toast.success(url ? "Video is on the bout." : "Video pulled from the bout.");
+        },
+        onError: (e) => toast.error(e.message),
+      },
+    );
+  };
+
+  return (
+    <div>
+      <p className="kicker">Bout videos</p>
+      <p className="mt-1 mb-3 text-sm text-muted">
+        Paste a link to a bout&rsquo;s video. The card and bouts pages only show a watch link once one
+        is added.
+      </p>
+      <ul className="divide-y divide-line rounded-lg border border-line bg-surface">
+        {items.map((m) => {
+          const value = drafts[m.id] ?? m.videoUrl;
+          const dirty = value !== m.videoUrl;
+          return (
+            <li key={m.id} className="flex flex-wrap items-center gap-3 px-4 py-3">
+              <span className="min-w-0 flex-1 truncate text-sm font-medium">
+                {labelOf(m)}
+                {m.videoUrl ? <span className="ml-2 text-[11px] uppercase tracking-[0.12em] text-amber">Video on</span> : null}
+              </span>
+              <Input
+                className="h-9 w-full sm:w-80"
+                placeholder="https://…"
+                value={value}
+                onChange={(e) => setDrafts((d) => ({ ...d, [m.id]: e.target.value }))}
+              />
+              <Button size="sm" disabled={save.isPending || !dirty} onClick={() => submit(m, value.trim())}>
+                Save
+              </Button>
+              {m.videoUrl ? (
+                <Button size="sm" variant="ghost" disabled={save.isPending} onClick={() => submit(m, "")}>
+                  Remove
+                </Button>
               ) : null}
             </li>
           );

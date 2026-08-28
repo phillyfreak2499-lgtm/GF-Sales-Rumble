@@ -1886,6 +1886,29 @@ export const postChallenge = createServerFn({ method: "POST" })
     return buildBoard(next!);
   });
 
+export const setMatchupVideo = createServerFn({ method: "POST" })
+  .validator((d: { slug: string; matchupId: string; url: string; pin?: string }) => d)
+  .handler(async ({ data }) => {
+    const userId = await optionalUserId();
+    const circuit = await loadCircuitBySlug(data.slug);
+    if (!circuit) throw new Error("Circuit not found.");
+    assertCanWrite(circuit, userId, data.pin);
+    const url = data.url.trim();
+    if (url && !/^https?:\/\/\S+$/i.test(url)) {
+      throw new Error("Paste a full link that starts with http:// or https://.");
+    }
+    if (url.length > 2000) throw new Error("That link is too long.");
+    const sql = await getSql();
+    const updated = await sql`
+      update matchups set video_url = ${url}
+      where id = ${data.matchupId} and circuit_id = ${circuit.id}
+      returning id
+    `;
+    if (!updated.length) throw new Error("That bout is not on the card.");
+    const next = await loadCircuitById(circuit.id);
+    return buildBoard(next!);
+  });
+
 export const claimChallenge = createServerFn({ method: "POST" })
   .validator((d: { passcode: string }) => d)
   .handler(async ({ data }) => {

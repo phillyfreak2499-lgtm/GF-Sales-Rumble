@@ -6,7 +6,7 @@ import { BRACKET_LABEL, type MetricStatus, type Placement, type Scorecard } from
 import { cn } from "@/lib/utils";
 import { fighterById } from "@/lib/use-board";
 import { RingCard, Ticket, VsMark } from "@/components/arena/ring";
-import { BracketChip, FighterLink, MetricPips, MonoMark, Points, Seed } from "./pieces";
+import { BoutVideoLink, BracketChip, FighterLink, MetricPips, MonoMark, Points, Seed } from "./pieces";
 
 export function MatchupRow({
   board,
@@ -81,6 +81,7 @@ export function MatchupRow({
             ) : null,
           )}
         </ul>
+        <BoutVideoLink url={m.videoUrl} />
       </RingCard>
     );
   }
@@ -166,6 +167,7 @@ export function MatchupRow({
           align="right"
         />
       </div>
+      <BoutVideoLink url={m.videoUrl} />
     </RingCard>
   );
 }

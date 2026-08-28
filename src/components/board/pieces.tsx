@@ -1,8 +1,27 @@
 import { Link } from "@tanstack/react-router";
+import { PlayCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { FLOOR, type Fighter, type FloorId, type MetricStatus, type Scorecard } from "@/lib/circuit/types";
 import { initials } from "@/lib/utils";
 import { cn } from "@/lib/utils";
+
+/** Renders nothing until the commissioner has attached a video to the bout. */
+export function BoutVideoLink({ url, className }: { url: string; className?: string }) {
+  if (!url) return null;
+  return (
+    <p className={cn("mt-4", className)}>
+      <a
+        href={url}
+        target="_blank"
+        rel="noreferrer"
+        className="inline-flex items-center gap-2 rounded-full border border-amber/50 px-3.5 py-1.5 text-[11px] uppercase tracking-[0.14em] text-amber hover:bg-amber/10"
+      >
+        <PlayCircle className="size-4" />
+        Watch this bout
+      </a>
+    </p>
+  );
+}
 
 export function MonoMark({
   first,
