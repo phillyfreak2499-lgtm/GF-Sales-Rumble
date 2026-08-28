@@ -64,9 +64,21 @@ export function FloorWorkList({
     .map((pack) => ({ pack, jobs: jobs.filter((j) => j.def.pack === pack) }))
     .filter((g) => g.jobs.length > 0);
 
+  const doneCount = jobs.filter((j) => j.done).length;
+
   return (
     <div>
-      <StarBelt earned={bank.earned} bank={bank.bank} />
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <StarBelt earned={bank.earned} bank={bank.bank} />
+        <span
+          className={cn(
+            "rounded-full border px-2.5 py-0.5 tabular text-[11px] uppercase tracking-[0.14em]",
+            doneCount === jobs.length ? "border-amber/50 text-amber" : "border-line text-subtle",
+          )}
+        >
+          {doneCount} of {jobs.length} done
+        </span>
+      </div>
       {groups.map((group) => (
         <div key={group.pack}>
           <p className="mt-4 text-[11px] uppercase tracking-[0.16em] text-subtle">{PACK_LABEL[group.pack]}</p>

@@ -42,6 +42,8 @@ import { awardedBonus } from "@/lib/circuit/training";
 import { WEEKLY_MODULES, LOCKER_GAMES, weekAcademyProgress } from "@/lib/circuit/training";
 import { DEFAULT_TICKER, SCORE_BLURB } from "@/lib/circuit/types";
 import { deskUnlocked, readDeskPin, writeDeskPin, clearDeskPin } from "@/lib/circuit/desk-pin";
+import { liveTasks } from "@/lib/circuit/floor-work";
+import { storeLabel } from "@/lib/circuit/stores";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import type { BoardPayload } from "@/lib/server/circuit";
 import type { Fighter } from "@/lib/circuit/types";
@@ -1093,6 +1095,70 @@ function Field({
   );
 }
 
+function StarBoard({ board }: { board: BoardPayload }) {
+  const week = board.circuit.currentWeek;
+  const jobCount = liveTasks((board.jobCatalog ?? []).filter((j) => j.custom)).length;
+  const rows = board.fighters
+    .filter((f) => !f.departed)
+    .map((f) => {
+      const done = board.floorWork.filter((w) => w.fighterId === f.id && w.done);
+      const thisWeek = done.filter((w) => w.weekNumber === week);
+      return {
+        f,
+        weekJobs: thisWeek.length,
+        weekStars: thisWeek.reduce((s, w) => s + w.stars, 0),
+        totalStars: done.reduce((s, w) => s + w.stars, 0),
+      };
+    })
+    .sort((a, b) => b.weekStars - a.weekStars || b.totalStars - a.totalStars || a.f.lastName.localeCompare(b.f.lastName));
+  const anyWork = rows.some((r) => r.totalStars > 0);
+
+  return (
+    <RingCard>
+      <p className="kicker">Week {week} · star board</p>
+      <h2 className="mt-2 font-display text-2xl italic">Who is doing the work</h2>
+      <p className="mt-1 mb-4 text-sm text-muted">
+        Jobs checked off this week and stars banked for the period. Prints straight from the lockers.
+      </p>
+      {anyWork ? (
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-left text-[11px] uppercase tracking-[0.14em] text-subtle">
+                <th className="py-2 pr-3 font-normal">Wrestler</th>
+                <th className="py-2 pr-3 font-normal">Store</th>
+                <th className="py-2 pr-3 font-normal tabular">Jobs this week</th>
+                <th className="py-2 pr-3 font-normal tabular">Stars this week</th>
+                <th className="py-2 font-normal tabular">Period stars</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-line">
+              {rows.map(({ f, weekJobs, weekStars, totalStars }) => (
+                <tr key={f.id} className={weekStars === 0 ? "text-subtle" : ""}>
+                  <td className="py-2 pr-3">
+                    <span className="font-medium">{f.nickname}</span>
+                    <span className="ml-2 text-subtle">
+                      {f.firstName} {f.lastName}
+                    </span>
+                  </td>
+                  <td className="py-2 pr-3">{storeLabel(f.store)}</td>
+                  <td className="py-2 pr-3 tabular">
+                    {weekJobs} / {jobCount}
+                  </td>
+                  <td className="py-2 pr-3 tabular">{weekStars}</td>
+                  <td className="py-2 tabular">{totalStars}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <p className="text-sm text-subtle">No jobs checked off yet. Stars print here as lockers tap them.</p>
+      )}
+    </RingCard>
+  );
+}
+
 function JobsDesk({ board }: { board: BoardPayload }) {
   const [title, setTitle] = useState("");
   const [blurb, setBlurb] = useState("");
@@ -1105,7 +1171,9 @@ function JobsDesk({ board }: { board: BoardPayload }) {
   const labels = { sales: "Sales", ops: "House", kind: "Team" } as const;
 
   return (
-    <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,22rem)_1fr]">
+    <div className="mt-8 space-y-8">
+    <StarBoard board={board} />
+    <div className="grid gap-8 lg:grid-cols-[minmax(0,22rem)_1fr]">
       <form
         className="space-y-3"
         onSubmit={(e) => {
@@ -1202,6 +1270,7 @@ function JobsDesk({ board }: { board: BoardPayload }) {
           </div>
         ))}
       </div>
+    </div>
     </div>
   );
 }
