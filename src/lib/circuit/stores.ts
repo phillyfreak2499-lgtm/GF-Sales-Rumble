@@ -5,17 +5,17 @@ export type StoreDef = {
 };
 
 export const STORES: StoreDef[] = [
-  { slug: "rockwall", name: "Rockwall, TX", short: "Rockwall" },
-  { slug: "southlake", name: "Southlake, TX", short: "Southlake" },
-  { slug: "allen", name: "Allen, TX", short: "Allen" },
-  { slug: "waco", name: "Waco, TX", short: "Waco" },
-  { slug: "plano", name: "Plano, TX", short: "Plano" },
-  { slug: "arlington", name: "Arlington, TX", short: "Arlington" },
-  { slug: "alliance", name: "Fort Worth - Alliance, TX", short: "Alliance" },
-  { slug: "college-station", name: "College Station, TX", short: "College Station" },
-  { slug: "fort-worth", name: "Fort Worth - Helen, TX", short: "Helen" },
-  { slug: "temple", name: "Temple, TX", short: "Temple" },
-  { slug: "waxahachie", name: "Waxahachie, TX", short: "Waxahachie" },
+  { slug: "rockwall", name: "Rockwall", short: "Rockwall" },
+  { slug: "southlake", name: "Southlake", short: "Southlake" },
+  { slug: "allen", name: "Allen", short: "Allen" },
+  { slug: "waco", name: "Waco", short: "Waco" },
+  { slug: "plano", name: "Plano", short: "Plano" },
+  { slug: "arlington", name: "Arlington", short: "Arlington" },
+  { slug: "alliance", name: "Fort Worth - Alliance", short: "Alliance" },
+  { slug: "college-station", name: "College Station", short: "College Station" },
+  { slug: "fort-worth", name: "Fort Worth - Helen", short: "Helen" },
+  { slug: "temple", name: "Temple", short: "Temple" },
+  { slug: "waxahachie", name: "Waxahachie", short: "Waxahachie" },
 ];
 
 export const STORE_BY_SLUG = Object.fromEntries(STORES.map((s) => [s.slug, s])) as Record<string, StoreDef>;
