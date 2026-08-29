@@ -239,7 +239,8 @@ function HowPage() {
             <p className="kicker">If you win</p>
             <p className="mt-3 font-display text-2xl italic">You stay on that floor</p>
             <p className="mt-2 text-sm leading-relaxed text-muted">
-              If you lose, you drop one floor. One loss does not end you.
+              If you lose, you drop one floor. One loss does not end you. Sweep all green and you
+              climb a floor back up — a sweep never counts as a loss.
             </p>
           </RingCard>
           <RingCard>
@@ -330,7 +331,8 @@ function HowPage() {
         <p className="kicker">03 · Floors</p>
         <h2 className="mt-2 font-display text-4xl italic sm:text-5xl">Three cards. One locker.</h2>
         <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted">
-          Everyone starts in Main Event. A loss drops you one floor. You keep wrestling until week four.
+          Everyone starts in Main Event. A loss drops you one floor. An all-green sweep climbs you
+          one floor back up. You keep wrestling until week four.
           Your floor is marked on your locker, the roster, and the Card page.
         </p>
         <div className="mt-6 grid gap-3 sm:grid-cols-3">

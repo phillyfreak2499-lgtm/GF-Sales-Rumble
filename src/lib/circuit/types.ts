@@ -114,6 +114,7 @@ export const DEFAULT_TICKER = [
   "Green beats blue beats orange",
   "Red is zero",
   "All green is a sweep",
+  "A sweep climbs you a floor",
   "Heat prints from the scoresheet",
   "Waterman Arch Supports",
   "Main Event · Redemption · Royal Rumble",

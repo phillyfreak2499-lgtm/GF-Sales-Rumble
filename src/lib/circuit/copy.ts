@@ -179,7 +179,7 @@ export function writeBoutPreview(opts: {
   const lastB = lastResult(b.id, opts.placements);
   const stakes = final
     ? `This is the ${label.toLowerCase()} title match.`
-    : `Winner stays in ${label}. Loser drops a floor.`;
+    : `Winner stays in ${label}. Loser drops a floor. All green climbs one.`;
 
   const hist = [lastA && `${shortName(a)} ${lastA}`, lastB && `${shortName(b)} ${lastB}`]
     .filter(Boolean)

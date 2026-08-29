@@ -203,7 +203,7 @@ function singlesPreview(
   const lb = lastLine(b.id, input.placements);
   const stakes = final
     ? `This is the ${label.toLowerCase()} championship.`
-    : `Winner stays in ${label}. Loser drops a floor.`;
+    : `Winner stays in ${label}. Loser drops a floor. All green climbs one.`;
 
   if (style === "formal") {
     return [

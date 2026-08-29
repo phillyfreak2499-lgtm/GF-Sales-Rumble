@@ -180,6 +180,13 @@ export function nextBracketOnLoss(from: BracketId): BracketId | "out" {
   return "out";
 }
 
+/** An all-green sweep climbs one floor back up. Main Event is the ceiling. */
+export function nextBracketOnSweep(from: BracketId): BracketId {
+  if (from === "rumble") return "redemption";
+  if (from === "redemption") return "main";
+  return "main";
+}
+
 export type ResolvedFighter = {
   fighterId: string;
   from: BracketId;
@@ -237,15 +244,24 @@ export function resolveWeek(opts: {
         opts.metricCount,
         opts.trainingBonus,
       );
+      const sweptCard = (id: string) =>
+        cardFor(
+          id,
+          opts.scores,
+          opts.metricCount,
+          opts.seedById.get(id) ?? 999,
+          opts.trainingBonus?.get(id) ?? 0,
+        ).sweep;
       if (m.kind === "rumble") {
         ranked.forEach((id, i) => {
           const isChamp = opts.isFinalWeek && i === 0;
           const stay = i === 0 || !opts.isFinalWeek;
+          const climb = !opts.isFinalWeek && sweptCard(id);
           out.push({
             fighterId: id,
             from: bracket,
             result: "rumble",
-            next: isChamp ? "champ" : stay ? bracket : "out",
+            next: isChamp ? "champ" : climb ? nextBracketOnSweep(bracket) : stay ? bracket : "out",
             rankInBracket: ranks.get(id) ?? i + 1,
           });
         });
@@ -254,6 +270,9 @@ export function resolveWeek(opts: {
       for (const id of m.fighterIds) {
         const won = id === winnerId;
         const isBye = m.kind === "bye";
+        // An all-green sweep never reads as a loss, and it climbs a floor.
+        // A sweep can only rank second to another sweep, so both stay safe.
+        const swept = sweptCard(id);
         if (opts.isFinalWeek && won) {
           out.push({
             fighterId: id,
@@ -262,12 +281,12 @@ export function resolveWeek(opts: {
             next: "champ",
             rankInBracket: ranks.get(id) ?? 1,
           });
-        } else if (won || isBye) {
+        } else if (won || isBye || swept) {
           out.push({
             fighterId: id,
             from: bracket,
             result: isBye ? "bye" : "win",
-            next: bracket,
+            next: swept && !opts.isFinalWeek ? nextBracketOnSweep(bracket) : bracket,
             rankInBracket: ranks.get(id) ?? 1,
           });
         } else {
