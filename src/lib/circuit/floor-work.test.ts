@@ -5,6 +5,7 @@ import {
   FREE_ITEMS,
   beltOf,
   liveTasks,
+  pickWeekTasks,
   weekJobs,
   type BeltUnlock,
   type FloorTaskDef,
@@ -44,6 +45,32 @@ describe("liveTasks", () => {
   it("drops tasks marked not live", () => {
     const tasks = liveTasks([{ ...customJob, id: "custom-dead", live: false }]);
     expect(tasks.some((t) => t.id === "custom-dead")).toBe(false);
+  });
+});
+
+describe("pickWeekTasks", () => {
+  it("deals exactly five unique jobs", () => {
+    const picks = pickWeekTasks("f1", 1);
+    expect(picks).toHaveLength(5);
+    expect(new Set(picks.map((t) => t.id)).size).toBe(5);
+  });
+
+  it("always mixes in every pack", () => {
+    for (const week of [1, 2, 3, 4]) {
+      const packs = new Set(pickWeekTasks("f1", week).map((t) => t.pack));
+      expect(packs.has("sales")).toBe(true);
+      expect(packs.has("ops")).toBe(true);
+      expect(packs.has("kind")).toBe(true);
+    }
+  });
+
+  it("is deterministic for the same fighter and week", () => {
+    expect(pickWeekTasks("f1", 2)).toEqual(pickWeekTasks("f1", 2));
+  });
+
+  it("can deal custom jobs from the pool", () => {
+    const picks = pickWeekTasks("f1", 1, [customJob], 999);
+    expect(picks.some((t) => t.id === "custom-1")).toBe(true);
   });
 });
 

@@ -146,7 +146,7 @@ const LOCKER_TABS = [
   {
     label: "Stats",
     icon: Trophy,
-    blurb: "Record, period points, heat, and the full list of floor jobs. Check a job off for stars on the belt.",
+    blurb: "Record, period points, heat, and your five floor jobs. Check a job off for stars on the belt.",
   },
   {
     label: "Card",
@@ -296,7 +296,7 @@ function HowPage() {
                 <span className="text-fg">Academy.</span> Four trainings every week. Pass one for +1. Floor games live under Play.
               </li>
               <li>
-                <span className="text-fg">Stars.</span> Every floor job, every week. Check them off. Spend them on Belt.
+                <span className="text-fg">Stars.</span> Five random floor jobs a week — do all five. Spend them on Belt.
               </li>
             </ul>
           </RingCard>
@@ -479,7 +479,7 @@ function HowPage() {
               Change them until the week is locked.
             </li>
             <li>
-              <span className="text-fg">3. Stats.</span> Check off floor jobs — all of them count. Stars hit the belt.
+              <span className="text-fg">3. Stats.</span> Check off your five floor jobs — all five count. Stars hit the belt.
             </li>
             <li>
               <span className="text-fg">4. Crowd.</span> Pick the card. Send one promo. Right picks become stars.

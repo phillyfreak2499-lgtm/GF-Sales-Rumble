@@ -36,6 +36,7 @@ import {
   postChallenge,
   saveHouseCall,
   setMatchupVideo,
+  resetFloorStars,
 } from "@/lib/server/circuit";
 import { onTheBook, useBoard, useBoardMutation } from "@/lib/use-board";
 import { scorecard } from "@/lib/circuit/engine";
@@ -43,7 +44,6 @@ import { awardedBonus } from "@/lib/circuit/training";
 import { WEEKLY_MODULES, LOCKER_GAMES, weekAcademyProgress } from "@/lib/circuit/training";
 import { DEFAULT_TICKER, SCORE_BLURB } from "@/lib/circuit/types";
 import { deskUnlocked, readDeskPin, writeDeskPin, clearDeskPin } from "@/lib/circuit/desk-pin";
-import { liveTasks } from "@/lib/circuit/floor-work";
 import { storeLabel } from "@/lib/circuit/stores";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import type { BoardPayload } from "@/lib/server/circuit";
@@ -1169,14 +1169,18 @@ function Field({
 
 function StarBoard({ board }: { board: BoardPayload }) {
   const week = board.circuit.currentWeek;
-  const jobCount = liveTasks((board.jobCatalog ?? []).filter((j) => j.custom)).length;
+  const reset = useBoardMutation((d: Parameters<typeof resetFloorStars>[0]["data"]) =>
+    resetFloorStars({ data: d }),
+  );
   const rows = board.fighters
     .filter((f) => !f.departed)
     .map((f) => {
-      const done = board.floorWork.filter((w) => w.fighterId === f.id && w.done);
+      const mine = board.floorWork.filter((w) => w.fighterId === f.id);
+      const done = mine.filter((w) => w.done);
       const thisWeek = done.filter((w) => w.weekNumber === week);
       return {
         f,
+        assigned: mine.filter((w) => w.weekNumber === week).length,
         weekJobs: thisWeek.length,
         weekStars: thisWeek.reduce((s, w) => s + w.stars, 0),
         totalStars: done.reduce((s, w) => s + w.stars, 0),
@@ -1201,11 +1205,12 @@ function StarBoard({ board }: { board: BoardPayload }) {
                 <th className="py-2 pr-3 font-normal">Store</th>
                 <th className="py-2 pr-3 font-normal tabular">Jobs this week</th>
                 <th className="py-2 pr-3 font-normal tabular">Stars this week</th>
-                <th className="py-2 font-normal tabular">Period stars</th>
+                <th className="py-2 pr-3 font-normal tabular">Period stars</th>
+                <th className="py-2 font-normal" />
               </tr>
             </thead>
             <tbody className="divide-y divide-line">
-              {rows.map(({ f, weekJobs, weekStars, totalStars }) => (
+              {rows.map(({ f, assigned, weekJobs, weekStars, totalStars }) => (
                 <tr key={f.id} className={weekStars === 0 ? "text-subtle" : ""}>
                   <td className="py-2 pr-3">
                     <span className="font-medium">{f.nickname}</span>
@@ -1215,10 +1220,31 @@ function StarBoard({ board }: { board: BoardPayload }) {
                   </td>
                   <td className="py-2 pr-3">{storeLabel(f.store)}</td>
                   <td className="py-2 pr-3 tabular">
-                    {weekJobs} / {jobCount}
+                    {weekJobs} / {assigned}
                   </td>
                   <td className="py-2 pr-3 tabular">{weekStars}</td>
-                  <td className="py-2 tabular">{totalStars}</td>
+                  <td className="py-2 pr-3 tabular">{totalStars}</td>
+                  <td className="py-2 text-right">
+                    {totalStars > 0 ? (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        disabled={reset.isPending}
+                        onClick={() => {
+                          if (!window.confirm(`Reset ${f.nickname} to zero stars? Belt purchases go too.`)) return;
+                          reset.mutate(
+                            { slug: board.circuit.slug, fighterId: f.id, pin: pinOf() },
+                            {
+                              onSuccess: () => toast.success(`${f.nickname} is back to zero.`),
+                              onError: (e) => toast.error(e.message),
+                            },
+                          );
+                        }}
+                      >
+                        Reset stars
+                      </Button>
+                    ) : null}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -1266,8 +1292,8 @@ function JobsDesk({ board }: { board: BoardPayload }) {
         <p className="kicker">Add a job</p>
         <h2 className="font-display text-3xl italic">The pool stays open</h2>
         <p className="text-sm text-muted">
-          Every job in the pool is on everyone&rsquo;s card every week — sales, house, and team.
-          Add anything you want in the mix.
+          Each person gets five random jobs every week: one sales, one house, one team, and two
+          wild cards. All five count. Add anything you want in the mix.
         </p>
         <div>
           <Label htmlFor="job-title">Job</Label>

@@ -42,7 +42,7 @@ import {
   FREE_ITEMS,
   beltOf,
   itemToPlateValue,
-  liveTasks,
+  pickWeekTasks,
   type FloorTaskDef,
   type TaskPack,
 } from "@/lib/circuit/floor-work";
@@ -1835,21 +1835,42 @@ async function ensureFloorWork(sql: Awaited<ReturnType<typeof getSql>>, circuit:
   const fighters = await sql<{ id: string }>`
     select id from fighters where circuit_id = ${circuit.id} and departed = false
   `;
-  const existing = await sql<{ fighter_id: string; task_id: string }>`
-    select fighter_id, task_id from floor_work
+  const existing = await sql<{ id: string; fighter_id: string; task_id: string; done: boolean }>`
+    select id, fighter_id, task_id, done from floor_work
     where circuit_id = ${circuit.id} and week_number = ${circuit.currentWeek}
   `;
-  const have = new Set(existing.map((r) => `${r.fighter_id}:${r.task_id}`));
-  const jobs = liveTasks(extras);
+  const rowsByFighter = new Map<string, typeof existing>();
+  for (const r of existing) {
+    const list = rowsByFighter.get(r.fighter_id);
+    if (list) list.push(r);
+    else rowsByFighter.set(r.fighter_id, [r]);
+  }
   const missing: Array<{ fighterId: string; task: FloorTaskDef }> = [];
+  const surplus: string[] = [];
   for (const f of fighters) {
-    for (const task of jobs) {
-      if (!have.has(`${f.id}:${task.id}`)) missing.push({ fighterId: f.id, task });
+    const picks = pickWeekTasks(f.id, circuit.currentWeek, extras, 5);
+    const pickIds = new Set(picks.map((t) => t.id));
+    const rows = rowsByFighter.get(f.id) ?? [];
+    const have = new Set(rows.map((r) => r.task_id));
+    // A job outside this week's five picks stays only if it was already done —
+    // earned stars never vanish, but open extras get pulled off the card.
+    for (const r of rows) {
+      if (!pickIds.has(r.task_id) && !r.done) surplus.push(r.id);
+    }
+    for (const task of picks) {
+      if (!have.has(task.id)) missing.push({ fighterId: f.id, task });
     }
   }
-  // Whole roster × whole catalog can be hundreds of rows; insert in batches so
-  // the first board load of a week is not hundreds of network round-trips.
+  // Batch the writes so the first board load of a week is not one
+  // round-trip per row across the whole roster.
   const chunkSize = 200;
+  for (let i = 0; i < surplus.length; i += chunkSize) {
+    const chunk = surplus.slice(i, i + chunkSize);
+    await sql.query(
+      `delete from floor_work where id in (${chunk.map((_, j) => `$${j + 1}`).join(", ")})`,
+      chunk,
+    );
+  }
   for (let i = 0; i < missing.length; i += chunkSize) {
     const chunk = missing.slice(i, i + chunkSize);
     const params: unknown[] = [];
@@ -1881,6 +1902,36 @@ export const postChallenge = createServerFn({ method: "POST" })
       insert into challenges (circuit_id, week_number, title, blurb)
       values (${circuit.id}, ${circuit.currentWeek}, ${title}, ${(data.blurb ?? "").trim()})
       on conflict (circuit_id, week_number) do update set title = excluded.title, blurb = excluded.blurb
+    `;
+    const next = await loadCircuitById(circuit.id);
+    return buildBoard(next!);
+  });
+
+export const resetFloorStars = createServerFn({ method: "POST" })
+  .validator((d: { slug: string; fighterId: string; pin?: string }) => d)
+  .handler(async ({ data }) => {
+    const userId = await optionalUserId();
+    const circuit = await loadCircuitBySlug(data.slug);
+    if (!circuit) throw new Error("Circuit not found.");
+    assertCanWrite(circuit, userId, data.pin);
+    const sql = await getSql();
+    const fighter = (
+      await sql<{ id: string }>`
+        select id from fighters where id = ${data.fighterId} and circuit_id = ${circuit.id}
+      `
+    )[0];
+    if (!fighter) throw new Error("That locker is not on the book.");
+    // Back to zero: uncheck every job, refund nothing — purchases made with
+    // those stars go too, and the plate returns to house trim.
+    await sql`
+      update floor_work set done = false, completed_at = null
+      where circuit_id = ${circuit.id} and fighter_id = ${data.fighterId} and done = true
+    `;
+    await sql`delete from belt_items where fighter_id = ${data.fighterId}`;
+    await sql`
+      update fighters
+      set plate_border = 'bone', plate_bg = 'surface', plate_mark = '', plate_sticker = ''
+      where id = ${data.fighterId}
     `;
     const next = await loadCircuitById(circuit.id);
     return buildBoard(next!);

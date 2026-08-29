@@ -167,7 +167,7 @@ function HonorsPage() {
             <p className="kicker">Week {board.circuit.currentWeek} · floor jobs</p>
             <h2 className="mt-2 font-display text-2xl italic">This week’s work</h2>
             <p className="mt-1 mb-4 text-sm text-muted">
-              Every floor job is open. Check them off in My locker for stars on the belt.
+              Five random floor jobs, all five live. Check them off in My locker for stars on the belt.
             </p>
             {focusId ? (
               <FloorWorkList board={board} fighterId={focusId} />
