@@ -803,11 +803,10 @@ function RosterDesk({ board }: { board: BoardPayload }) {
               slug={board.circuit.slug}
               onRemove={() => {
                 const name = f.nickname || `${f.firstName} ${f.lastName}`;
-                if (!window.confirm(`Take ${name} off the card? Past weeks stay in the book. You can put them back.`)) return;
                 drop.mutate(
                   { slug: board.circuit.slug, fighterId: f.id, pin: pinOf() },
                   {
-                    onSuccess: () => toast.success(`${name} is off the card.`),
+                    onSuccess: () => toast.success(`${name} is off the card. Past weeks stay in the book.`),
                     onError: (e) => toast.error(e.message),
                   },
                 );
@@ -840,6 +839,7 @@ function FighterAdminRow({
   onRestore: () => void;
 }) {
   const [open, setOpen] = useState(false);
+  const [confirmRemove, setConfirmRemove] = useState(false);
   const [hometown, setHometown] = useState(fighter.hometown);
   const [funFact, setFunFact] = useState(fighter.funFact);
   const [store, setStore] = useState(fighter.store);
@@ -874,8 +874,21 @@ function FighterAdminRow({
             Put back
           </Button>
         ) : (
-          <Button size="sm" variant="ghost" onClick={onRemove}>
-            Remove
+          <Button
+            size="sm"
+            variant={confirmRemove ? "outline" : "ghost"}
+            className={confirmRemove ? "border-rose/50 text-rose" : undefined}
+            onClick={() => {
+              if (!confirmRemove) {
+                setConfirmRemove(true);
+                window.setTimeout(() => setConfirmRemove(false), 5000);
+                return;
+              }
+              setConfirmRemove(false);
+              onRemove();
+            }}
+          >
+            {confirmRemove ? "Tap again to remove" : "Remove"}
           </Button>
         )}
       </div>
@@ -1172,6 +1185,7 @@ function StarBoard({ board }: { board: BoardPayload }) {
   const reset = useBoardMutation((d: Parameters<typeof resetFloorStars>[0]["data"]) =>
     resetFloorStars({ data: d }),
   );
+  const [confirmReset, setConfirmReset] = useState<string | null>(null);
   const rows = board.fighters
     .filter((f) => !f.departed)
     .map((f) => {
@@ -1228,10 +1242,19 @@ function StarBoard({ board }: { board: BoardPayload }) {
                     {totalStars > 0 ? (
                       <Button
                         size="sm"
-                        variant="ghost"
+                        variant={confirmReset === f.id ? "outline" : "ghost"}
+                        className={confirmReset === f.id ? "border-rose/50 text-rose" : undefined}
                         disabled={reset.isPending}
                         onClick={() => {
-                          if (!window.confirm(`Reset ${f.nickname} to zero stars? Belt purchases go too.`)) return;
+                          if (confirmReset !== f.id) {
+                            setConfirmReset(f.id);
+                            window.setTimeout(
+                              () => setConfirmReset((c) => (c === f.id ? null : c)),
+                              5000,
+                            );
+                            return;
+                          }
+                          setConfirmReset(null);
                           reset.mutate(
                             { slug: board.circuit.slug, fighterId: f.id, pin: pinOf() },
                             {
@@ -1241,7 +1264,7 @@ function StarBoard({ board }: { board: BoardPayload }) {
                           );
                         }}
                       >
-                        Reset stars
+                        {confirmReset === f.id ? "Tap again to reset" : "Reset stars"}
                       </Button>
                     ) : null}
                   </td>
