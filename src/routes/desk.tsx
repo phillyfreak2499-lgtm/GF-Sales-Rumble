@@ -26,6 +26,12 @@ function DeskPage() {
   const [confirmRewind, setConfirmRewind] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
   const [rewinding, setRewinding] = useState(false);
+  const slug = board?.circuit.slug ?? "";
+
+  const finalize = useBoardMutation(() => finalizeWeek({ data: { slug, pin: pinOf() } }));
+  const roll = useBoardMutation(() => rollRemaining({ data: { slug, pin: pinOf() } }));
+  const start = useBoardMutation(() => startCircuit({ data: { slug, pin: pinOf() } }));
+  const lock = useBoardMutation((locked: boolean) => lockWeek({ data: { slug, locked, pin: pinOf() } }));
 
   useEffect(() => {
     const saved = readDeskPin();
@@ -50,10 +56,6 @@ function DeskPage() {
   const { circuit } = board;
   const week = board.weeks.find((w) => w.weekNumber === circuit.currentWeek);
   const canClose = (week?.status === "open" || week?.status === "locked") && circuit.status === "active";
-  const finalize = useBoardMutation(() => finalizeWeek({ data: { slug: circuit.slug, pin: pinOf() } }));
-  const roll = useBoardMutation(() => rollRemaining({ data: { slug: circuit.slug, pin: pinOf() } }));
-  const start = useBoardMutation(() => startCircuit({ data: { slug: circuit.slug, pin: pinOf() } }));
-  const lock = useBoardMutation((locked: boolean) => lockWeek({ data: { slug: circuit.slug, locked, pin: pinOf() } }));
 
   return (
     <Shell>
@@ -256,9 +258,8 @@ function DeskPage() {
       </div>
 
       <p className="mt-4 max-w-xl text-sm text-muted">
-        The locker page is <span className="text-fg">My locker</span> at /score. /locker now opens that
-        same page. Reset locker asks twice and still does not wipe anyone. Clear scores blanks the
-        metric colors and puts you back on week 1. Passcodes stay.
+        The locker page is My locker. Reset locker asks twice and still does not wipe anyone.
+        Clear scores blanks the metric colors and puts you back on week 1. Passcodes stay.
       </p>
     </Shell>
   );
