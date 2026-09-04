@@ -22,6 +22,7 @@ import { Route as ReportRouteImport } from './routes/report'
 import { Route as RosterRouteImport } from './routes/roster'
 import { Route as ScoreRouteImport } from './routes/score'
 import { Route as SubmitRouteImport } from './routes/submit'
+import { Route as LockerRouteImport } from './routes/locker'
 import { Route as FighterIdRouteImport } from './routes/fighter.$id'
 import { Route as PlaySlugRouteImport } from './routes/play.$slug'
 import { Route as PrintIdRouteImport } from './routes/print.$id'
@@ -93,6 +94,11 @@ const SubmitRoute = SubmitRouteImport.update({
   path: '/submit',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LockerRoute = LockerRouteImport.update({
+  id: '/locker',
+  path: '/locker',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const FighterIdRoute = FighterIdRouteImport.update({
   id: '/fighter/$id',
   path: '/fighter/$id',
@@ -133,6 +139,7 @@ export interface FileRoutesByFullPath {
   '/roster': typeof RosterRoute
   '/score': typeof ScoreRoute
   '/submit': typeof SubmitRoute
+  '/locker': typeof LockerRoute
   '/fighter/$id': typeof FighterIdRoute
   '/play/$slug': typeof PlaySlugRoute
   '/print/$id': typeof PrintIdRoute
@@ -153,6 +160,7 @@ export interface FileRoutesByTo {
   '/roster': typeof RosterRoute
   '/score': typeof ScoreRoute
   '/submit': typeof SubmitRoute
+  '/locker': typeof LockerRoute
   '/fighter/$id': typeof FighterIdRoute
   '/play/$slug': typeof PlaySlugRoute
   '/print/$id': typeof PrintIdRoute
@@ -174,6 +182,7 @@ export interface FileRoutesById {
   '/roster': typeof RosterRoute
   '/score': typeof ScoreRoute
   '/submit': typeof SubmitRoute
+  '/locker': typeof LockerRoute
   '/fighter/$id': typeof FighterIdRoute
   '/play/$slug': typeof PlaySlugRoute
   '/print/$id': typeof PrintIdRoute
@@ -196,6 +205,7 @@ export interface FileRouteTypes {
     | '/roster'
     | '/score'
     | '/submit'
+    | '/locker'
     | '/fighter/$id'
     | '/play/$slug'
     | '/print/$id'
@@ -216,6 +226,7 @@ export interface FileRouteTypes {
     | '/roster'
     | '/score'
     | '/submit'
+    | '/locker'
     | '/fighter/$id'
     | '/play/$slug'
     | '/print/$id'
@@ -236,6 +247,7 @@ export interface FileRouteTypes {
     | '/roster'
     | '/score'
     | '/submit'
+    | '/locker'
     | '/fighter/$id'
     | '/play/$slug'
     | '/print/$id'
@@ -257,6 +269,7 @@ export interface RootRouteChildren {
   RosterRoute: typeof RosterRoute
   ScoreRoute: typeof ScoreRoute
   SubmitRoute: typeof SubmitRoute
+  LockerRoute: typeof LockerRoute
   FighterIdRoute: typeof FighterIdRoute
   PlaySlugRoute: typeof PlaySlugRoute
   PrintIdRoute: typeof PrintIdRoute
@@ -357,6 +370,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SubmitRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/locker': {
+      id: '/locker'
+      path: '/locker'
+      fullPath: '/locker'
+      preLoaderRoute: typeof LockerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/fighter/$id': {
       id: '/fighter/$id'
       path: '/fighter/$id'
@@ -409,6 +429,7 @@ const rootRouteChildren: RootRouteChildren = {
   RosterRoute: RosterRoute,
   ScoreRoute: ScoreRoute,
   SubmitRoute: SubmitRoute,
+  LockerRoute: LockerRoute,
   FighterIdRoute: FighterIdRoute,
   PlaySlugRoute: PlaySlugRoute,
   PrintIdRoute: PrintIdRoute,
