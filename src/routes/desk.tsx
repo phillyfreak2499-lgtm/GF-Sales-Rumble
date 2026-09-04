@@ -2,14 +2,24 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Shell } from "@/components/shell";
-import { PageHead, RingCard } from "@/components/arena/ring";
+import { PageHead } from "@/components/arena/ring";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
-import { finalizeWeek, lockWeek, rollRemaining, startCircuit } from "@/lib/server/circuit";
 import { rewindToWeek1 } from "@/lib/server/rewind";
-import { onTheBook, useBoard, useBoardMutation } from "@/lib/use-board";
+import { onTheBook, useBoard } from "@/lib/use-board";
 import { deskUnlocked, readDeskPin, writeDeskPin, clearDeskPin } from "@/lib/circuit/desk-pin";
+import { useCurrentUserState } from "@/lib/auth/use-current-user";
+import {
+  WeekDesk,
+  AcademyDesk,
+  CodesDesk,
+  RosterDesk,
+  SeedsDesk,
+  SettingsDesk,
+  JobsDesk,
+  HouseDesk,
+} from "@/routes/desk-panels";
 
 export const Route = createFileRoute("/desk")({
   component: DeskPage,
@@ -20,18 +30,16 @@ function pinOf() {
 }
 
 function DeskPage() {
-  const { data: board, isPending } = useBoard();
+  const { data: board, isPending, refetch } = useBoard();
+  const { user, isPending: authPending } = useCurrentUserState();
+  const [tab, setTab] = useState<
+    "week" | "roster" | "codes" | "academy" | "seeds" | "jobs" | "house" | "settings"
+  >("week");
   const [pin, setPin] = useState("");
   const [open, setOpen] = useState(false);
-  const [confirmRewind, setConfirmRewind] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
+  const [confirmRewind, setConfirmRewind] = useState(false);
   const [rewinding, setRewinding] = useState(false);
-  const slug = board?.circuit.slug ?? "";
-
-  const finalize = useBoardMutation(() => finalizeWeek({ data: { slug, pin: pinOf() } }));
-  const roll = useBoardMutation(() => rollRemaining({ data: { slug, pin: pinOf() } }));
-  const start = useBoardMutation(() => startCircuit({ data: { slug, pin: pinOf() } }));
-  const lock = useBoardMutation((locked: boolean) => lockWeek({ data: { slug, locked, pin: pinOf() } }));
 
   useEffect(() => {
     const saved = readDeskPin();
@@ -62,7 +70,7 @@ function DeskPage() {
       <PageHead
         kicker="Commissioner desk"
         title={circuit.name}
-        lede="Unlock the desk to clear scores or lock the week. Reset locker will not wipe players or codes."
+        lede="Add people, seed, lock the week, and hand out passcodes. Edit anyone on the Week tab to mark scores."
         action={
           <div className="flex flex-wrap gap-2">
             <Badge tone="bone">
@@ -70,10 +78,69 @@ function DeskPage() {
             </Badge>
             <Badge>{circuit.status}</Badge>
             {week ? <Badge tone={week.status === "locked" ? "amber" : "steel"}>{week.status}</Badge> : null}
+            <Badge>Join {circuit.joinCode}</Badge>
             <Badge>{onTheBook(board.fighters).length} on the book</Badge>
           </div>
         }
       />
+      <div className="mt-6 flex flex-wrap gap-2">
+        <Button asChild variant="outline">
+          <Link to="/new">New circuit</Link>
+        </Button>
+        <Button asChild variant="outline">
+          <Link to="/score">Open scoresheet</Link>
+        </Button>
+        <Button
+          variant={confirmReset ? "outline" : "subtle"}
+          className={confirmReset ? "border-rose/50 text-rose" : undefined}
+          disabled={!open}
+          onClick={() => {
+            if (!confirmReset) {
+              setConfirmReset(true);
+              window.setTimeout(() => setConfirmReset(false), 5000);
+              toast.message("Are you sure? Tap again. This still will not wipe anyone.");
+              return;
+            }
+            setConfirmReset(false);
+            toast.success("Nothing was reset. Players, lockers, and codes are still here.");
+          }}
+        >
+          {confirmReset ? "Are you sure? Tap again — nothing will be wiped" : "Reset locker"}
+        </Button>
+        {circuit.status !== "setup" ? (
+          <Button
+            variant={confirmRewind ? "outline" : "subtle"}
+            className={confirmRewind ? "border-amber/50 text-amber" : undefined}
+            disabled={rewinding || !open}
+            onClick={() => {
+              if (!confirmRewind) {
+                setConfirmRewind(true);
+                window.setTimeout(() => setConfirmRewind(false), 5000);
+                toast.message("Are you sure? Tap again to clear metric scores only.");
+                return;
+              }
+              setConfirmRewind(false);
+              setRewinding(true);
+              void rewindToWeek1({ data: { slug: circuit.slug, pin: pinOf() } })
+                .then(async () => {
+                  toast.success("Scores cleared. Week 1 is open. Lockers and codes were not touched.");
+                  await refetch();
+                  setRewinding(false);
+                })
+                .catch((e) => {
+                  setRewinding(false);
+                  toast.error(e instanceof Error ? e.message : "Could not clear scores.");
+                });
+            }}
+          >
+            {rewinding
+              ? "Clearing scores…"
+              : confirmRewind
+                ? "Are you sure? Tap again — scores only"
+                : "Clear scores"}
+          </Button>
+        ) : null}
+      </div>
 
       <form
         className="mt-6 flex max-w-lg flex-col gap-2 rounded-lg border border-line bg-surface p-4 sm:flex-row sm:items-end"
@@ -118,149 +185,39 @@ function DeskPage() {
           ) : null}
         </div>
       </form>
+      <p className="mt-2 text-xs text-subtle">
+        Easiest score entry: Week tab, tap Edit next to a wrestler. Or open the scoresheet / My locker.
+      </p>
 
-      <div className="mt-6 flex flex-wrap gap-2">
-        <Button asChild variant="outline">
-          <Link to="/">Back to the ring</Link>
-        </Button>
-        <Button asChild variant="outline">
-          <Link to="/score">Open my locker</Link>
-        </Button>
-        <Button
-          variant={confirmReset ? "outline" : "subtle"}
-          className={confirmReset ? "border-rose/50 text-rose" : undefined}
-          disabled={!open}
-          onClick={() => {
-            if (!confirmReset) {
-              setConfirmReset(true);
-              window.setTimeout(() => setConfirmReset(false), 5000);
-              toast.message("Are you sure? Tap again. This still will not wipe anyone.");
-              return;
-            }
-            setConfirmReset(false);
-            toast.success("Nothing was reset. Players, lockers, and codes are still here. Use Clear scores to blank the cards.");
-          }}
-        >
-          {confirmReset ? "Are you sure? Tap again — nothing will be wiped" : "Reset locker"}
-        </Button>
-        {circuit.status !== "setup" ? (
-          <Button
-            variant={confirmRewind ? "outline" : "subtle"}
-            className={confirmRewind ? "border-amber/50 text-amber" : undefined}
-            disabled={rewinding || !open}
-            onClick={() => {
-              if (!confirmRewind) {
-                setConfirmRewind(true);
-                window.setTimeout(() => setConfirmRewind(false), 5000);
-                toast.message("Are you sure? Tap again to clear metric scores only.");
-                return;
-              }
-              setConfirmRewind(false);
-              setRewinding(true);
-              void rewindToWeek1({ data: { slug: circuit.slug, pin: pinOf() } })
-                .then(() => {
-                  toast.success("Scores cleared. Week 1 is open. Lockers and codes were not touched.");
-                  window.location.reload();
-                })
-                .catch((e) => {
-                  setRewinding(false);
-                  toast.error(e instanceof Error ? e.message : "Could not clear scores.");
-                });
-            }}
-          >
-            {rewinding
-              ? "Clearing scores…"
-              : confirmRewind
-                ? "Are you sure? Tap again — scores only"
-                : "Clear scores"}
-          </Button>
-        ) : null}
-      </div>
-
-      {circuit.status === "setup" ? (
-        <RingCard className="mt-8 border-amber/40 bg-amber/10 p-5 sm:p-7">
-          <p className="kicker !text-amber">The bell has not rung</p>
-          <h2 className="mt-2 font-display text-3xl italic">Open week 1 to start the matches</h2>
-          <Button
-            className="mt-5"
-            size="lg"
-            disabled={start.isPending || !open}
-            onClick={() =>
-              start.mutate(undefined, {
-                onSuccess: () => toast.success("Week 1 is open."),
-                onError: (e) => toast.error(e.message),
-              })
-            }
-          >
-            {start.isPending ? "Opening…" : open ? "Seed and open week 1" : "Unlock the desk first"}
-          </Button>
-        </RingCard>
+      {!authPending && !user && !circuit.isDemo ? (
+        <p className="mt-6 text-sm text-muted">
+          Sign in to run your own circuit, or use the commissioner password on this desk.
+        </p>
       ) : null}
 
       <div className="mt-8 flex flex-wrap gap-2">
-        {canClose ? (
-          <>
-            {week?.status === "open" ? (
-              <>
-                <Button
-                  variant="outline"
-                  disabled={roll.isPending}
-                  onClick={() =>
-                    roll.mutate(undefined, {
-                      onSuccess: () => toast.success("Remaining cards rolled."),
-                      onError: (e) => toast.error(e.message),
-                    })
-                  }
-                >
-                  Fill remaining cards
-                </Button>
-                <Button
-                  variant="outline"
-                  disabled={lock.isPending}
-                  onClick={() =>
-                    lock.mutate(true, {
-                      onSuccess: () => toast.success("Week locked."),
-                      onError: (e) => toast.error(e.message),
-                    })
-                  }
-                >
-                  Lock scores
-                </Button>
-              </>
-            ) : null}
-            {week?.status === "locked" ? (
-              <Button
-                variant="outline"
-                disabled={lock.isPending}
-                onClick={() =>
-                  lock.mutate(false, {
-                    onSuccess: () => toast.success("Week unlocked."),
-                    onError: (e) => toast.error(e.message),
-                  })
-                }
-              >
-                Unlock scores
-              </Button>
-            ) : null}
-            <Button
-              disabled={finalize.isPending}
-              onClick={() =>
-                finalize.mutate(undefined, {
-                  onSuccess: () => toast.success("Week closed. Brackets advanced."),
-                  onError: (e) => toast.error(e.message),
-                })
-              }
-            >
-              Close week and advance
-            </Button>
-          </>
-        ) : null}
+        {(["week", "roster", "codes", "academy", "seeds", "jobs", "house", "settings"] as const).map((t) => (
+          <button
+            key={t}
+            type="button"
+            onClick={() => setTab(t)}
+            className={`min-h-11 rounded-sm border px-4 text-sm capitalize ${
+              tab === t ? "border-bone bg-bone/10" : "border-line text-muted"
+            }`}
+          >
+            {t}
+          </button>
+        ))}
       </div>
 
-      <p className="mt-4 max-w-xl text-sm text-muted">
-        The locker page is My locker. Reset locker asks twice and still does not wipe anyone.
-        Clear scores blanks the metric colors and puts you back on week 1. Passcodes stay.
-      </p>
+      {tab === "week" ? <WeekDesk board={board} canClose={canClose} unlocked={open} /> : null}
+      {tab === "roster" ? <RosterDesk board={board} /> : null}
+      {tab === "codes" ? <CodesDesk board={board} unlocked={open} /> : null}
+      {tab === "academy" ? <AcademyDesk board={board} /> : null}
+      {tab === "seeds" ? <SeedsDesk board={board} /> : null}
+      {tab === "jobs" ? <JobsDesk board={board} /> : null}
+      {tab === "house" ? <HouseDesk board={board} unlocked={open} /> : null}
+      {tab === "settings" ? <SettingsDesk board={board} /> : null}
     </Shell>
   );
 }
