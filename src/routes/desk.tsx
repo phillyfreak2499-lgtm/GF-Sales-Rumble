@@ -6,7 +6,7 @@ import { PageHead, RingCard } from "@/components/arena/ring";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
-import { finalizeWeek, lockWeek, resetDemo, rollRemaining, startCircuit } from "@/lib/server/circuit";
+import { finalizeWeek, lockWeek, rollRemaining, startCircuit } from "@/lib/server/circuit";
 import { rewindToWeek1 } from "@/lib/server/rewind";
 import { onTheBook, useBoard, useBoardMutation } from "@/lib/use-board";
 import { deskUnlocked, readDeskPin, writeDeskPin, clearDeskPin } from "@/lib/circuit/desk-pin";
@@ -24,6 +24,7 @@ function DeskPage() {
   const [pin, setPin] = useState("");
   const [open, setOpen] = useState(false);
   const [confirmRewind, setConfirmRewind] = useState(false);
+  const [confirmReset, setConfirmReset] = useState(false);
   const [rewinding, setRewinding] = useState(false);
 
   useEffect(() => {
@@ -59,7 +60,7 @@ function DeskPage() {
       <PageHead
         kicker="Commissioner desk"
         title={circuit.name}
-        lede="Unlock the desk to rewind week 1, lock scores, or close a week. Lockers and passcodes are not reset from here."
+        lede="Unlock the desk to clear scores or lock the week. Reset locker will not wipe players or codes."
         action={
           <div className="flex flex-wrap gap-2">
             <Badge tone="bone">
@@ -120,20 +121,56 @@ function DeskPage() {
         <Button asChild variant="outline">
           <Link to="/">Back to the ring</Link>
         </Button>
-        {circuit.isDemo ? (
+        <Button asChild variant="outline">
+          <Link to="/score">Open my locker</Link>
+        </Button>
+        <Button
+          variant={confirmReset ? "outline" : "subtle"}
+          className={confirmReset ? "border-rose/50 text-rose" : undefined}
+          disabled={!open}
+          onClick={() => {
+            if (!confirmReset) {
+              setConfirmReset(true);
+              window.setTimeout(() => setConfirmReset(false), 5000);
+              toast.message("Are you sure? Tap again. This still will not wipe anyone.");
+              return;
+            }
+            setConfirmReset(false);
+            toast.success("Nothing was reset. Players, lockers, and codes are still here. Use Clear scores to blank the cards.");
+          }}
+        >
+          {confirmReset ? "Are you sure? Tap again — nothing will be wiped" : "Reset locker"}
+        </Button>
+        {circuit.status !== "setup" ? (
           <Button
-            variant="subtle"
-            onClick={async () => {
-              try {
-                await resetDemo({ data: { pin: pinOf() } });
-                toast.success("Locker reset.");
-                window.location.reload();
-              } catch (e) {
-                toast.error(e instanceof Error ? e.message : "Could not reset.");
+            variant={confirmRewind ? "outline" : "subtle"}
+            className={confirmRewind ? "border-amber/50 text-amber" : undefined}
+            disabled={rewinding || !open}
+            onClick={() => {
+              if (!confirmRewind) {
+                setConfirmRewind(true);
+                window.setTimeout(() => setConfirmRewind(false), 5000);
+                toast.message("Are you sure? Tap again to clear metric scores only.");
+                return;
               }
+              setConfirmRewind(false);
+              setRewinding(true);
+              void rewindToWeek1({ data: { slug: circuit.slug, pin: pinOf() } })
+                .then(() => {
+                  toast.success("Scores cleared. Week 1 is open. Lockers and codes were not touched.");
+                  window.location.reload();
+                })
+                .catch((e) => {
+                  setRewinding(false);
+                  toast.error(e instanceof Error ? e.message : "Could not clear scores.");
+                });
             }}
           >
-            Reset locker
+            {rewinding
+              ? "Clearing scores…"
+              : confirmRewind
+                ? "Are you sure? Tap again — scores only"
+                : "Clear scores"}
           </Button>
         ) : null}
       </div>
@@ -161,9 +198,6 @@ function DeskPage() {
       <div className="mt-8 flex flex-wrap gap-2">
         {canClose ? (
           <>
-            <Button asChild variant="outline">
-              <Link to="/score">Open scoresheet</Link>
-            </Button>
             {week?.status === "open" ? (
               <>
                 <Button
@@ -219,43 +253,12 @@ function DeskPage() {
             </Button>
           </>
         ) : null}
-        {circuit.status !== "setup" ? (
-          <Button
-            variant={confirmRewind ? "outline" : "subtle"}
-            className={confirmRewind ? "border-rose/50 text-rose" : undefined}
-            disabled={rewinding || !open}
-            onClick={() => {
-              if (!confirmRewind) {
-                setConfirmRewind(true);
-                window.setTimeout(() => setConfirmRewind(false), 5000);
-                return;
-              }
-              setConfirmRewind(false);
-              setRewinding(true);
-              void rewindToWeek1({ data: { slug: circuit.slug, pin: pinOf() } })
-                .then(() => {
-                  toast.success("Back on week 1. Metric cards are blank. Lockers and codes are untouched.");
-                  window.location.reload();
-                })
-                .catch((e) => {
-                  setRewinding(false);
-                  toast.error(e instanceof Error ? e.message : "Could not rewind.");
-                });
-            }}
-          >
-            {rewinding
-              ? "Rewinding…"
-              : confirmRewind
-                ? "Tap again — clear metric scores, stay on week 1"
-                : "Back to week 1, clear metric scores"}
-          </Button>
-        ) : null}
       </div>
 
       <p className="mt-4 max-w-xl text-sm text-muted">
-        Rewind blanks every metric color on the cards and puts the building back on week 1. It does
-        not erase players, passcodes, locker rooms, academy work, or floor jobs. Roster / codes /
-        academy tabs will return on the next desk restore.
+        The locker page is <span className="text-fg">My locker</span> at /score. /locker now opens that
+        same page. Reset locker asks twice and still does not wipe anyone. Clear scores blanks the
+        metric colors and puts you back on week 1. Passcodes stay.
       </p>
     </Shell>
   );
