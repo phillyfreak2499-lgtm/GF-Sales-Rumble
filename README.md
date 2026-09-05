@@ -48,7 +48,7 @@ Five metrics (rename them on the desk):
 1. Add the locker (Period 10 floor is seeded). New hires can be added any time — no cap.
 2. Seed them, or let last period’s numbers do it.
 3. **Seed and open week 1.**
-4. Each specialist marks their card with their passcode. When everyone is locked in, the week can auto-advance.
+4. Each specialist marks their card with their passcode. Mid-week updates stay on that week. The commissioner taps **Close week and advance** when the week is actually over.
 5. Highest seed gets the bye if the field is odd. Highest vs lowest pairing.
 6. A loss drops one floor. The gazette writes itself.
 7. Repeat through week 4. Each floor gets a champion.

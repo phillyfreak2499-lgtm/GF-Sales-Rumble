@@ -6,7 +6,7 @@ import { PageHead } from "@/components/arena/ring";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
-import { rewindToWeek1 } from "@/lib/server/rewind";
+import { returnToWeek1KeepScores, rewindToWeek1 } from "@/lib/server/rewind";
 import { onTheBook, useBoard } from "@/lib/use-board";
 import { deskUnlocked, readDeskPin, writeDeskPin, clearDeskPin } from "@/lib/circuit/desk-pin";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
@@ -39,7 +39,9 @@ function DeskPage() {
   const [open, setOpen] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
   const [confirmRewind, setConfirmRewind] = useState(false);
+  const [confirmReturn, setConfirmReturn] = useState(false);
   const [rewinding, setRewinding] = useState(false);
+  const [returning, setReturning] = useState(false);
 
   useEffect(() => {
     const saved = readDeskPin();
@@ -108,37 +110,70 @@ function DeskPage() {
           {confirmReset ? "Are you sure? Tap again — nothing will be wiped" : "Reset locker"}
         </Button>
         {circuit.status !== "setup" ? (
-          <Button
-            variant={confirmRewind ? "outline" : "subtle"}
-            className={confirmRewind ? "border-amber/50 text-amber" : undefined}
-            disabled={rewinding || !open}
-            onClick={() => {
-              if (!confirmRewind) {
-                setConfirmRewind(true);
-                window.setTimeout(() => setConfirmRewind(false), 5000);
-                toast.message("Are you sure? Tap again to clear metric scores only.");
-                return;
-              }
-              setConfirmRewind(false);
-              setRewinding(true);
-              void rewindToWeek1({ data: { slug: circuit.slug, pin: pinOf() } })
-                .then(async () => {
-                  toast.success("Scores cleared. Week 1 is open. Lockers and codes were not touched.");
-                  await refetch();
-                  setRewinding(false);
-                })
-                .catch((e) => {
-                  setRewinding(false);
-                  toast.error(e instanceof Error ? e.message : "Could not clear scores.");
-                });
-            }}
-          >
-            {rewinding
-              ? "Clearing scores…"
-              : confirmRewind
-                ? "Are you sure? Tap again — scores only"
-                : "Clear scores"}
-          </Button>
+          <>
+            <Button
+              variant={confirmReturn ? "outline" : "subtle"}
+              className={confirmReturn ? "border-amber/50 text-amber" : undefined}
+              disabled={returning || rewinding || !open}
+              onClick={() => {
+                if (!confirmReturn) {
+                  setConfirmReturn(true);
+                  window.setTimeout(() => setConfirmReturn(false), 5000);
+                  toast.message("Are you sure? Tap again to stay on week 1. Week-1 cards stay.");
+                  return;
+                }
+                setConfirmReturn(false);
+                setReturning(true);
+                void returnToWeek1KeepScores({ data: { slug: circuit.slug, pin: pinOf() } })
+                  .then(async () => {
+                    toast.success("Back on week 1. Cards already in are still there. Week will not advance until you close it.");
+                    await refetch();
+                    setReturning(false);
+                  })
+                  .catch((e) => {
+                    setReturning(false);
+                    toast.error(e instanceof Error ? e.message : "Could not return to week 1.");
+                  });
+              }}
+            >
+              {returning
+                ? "Sending back…"
+                : confirmReturn
+                  ? "Are you sure? Tap again — keep week 1 scores"
+                  : "Back to week 1"}
+            </Button>
+            <Button
+              variant={confirmRewind ? "outline" : "subtle"}
+              className={confirmRewind ? "border-amber/50 text-amber" : undefined}
+              disabled={rewinding || returning || !open}
+              onClick={() => {
+                if (!confirmRewind) {
+                  setConfirmRewind(true);
+                  window.setTimeout(() => setConfirmRewind(false), 5000);
+                  toast.message("Are you sure? Tap again to clear metric scores only.");
+                  return;
+                }
+                setConfirmRewind(false);
+                setRewinding(true);
+                void rewindToWeek1({ data: { slug: circuit.slug, pin: pinOf() } })
+                  .then(async () => {
+                    toast.success("Scores cleared. Week 1 is open. Lockers and codes were not touched.");
+                    await refetch();
+                    setRewinding(false);
+                  })
+                  .catch((e) => {
+                    setRewinding(false);
+                    toast.error(e instanceof Error ? e.message : "Could not clear scores.");
+                  });
+              }}
+            >
+              {rewinding
+                ? "Clearing scores…"
+                : confirmRewind
+                  ? "Are you sure? Tap again — scores only"
+                  : "Clear scores"}
+            </Button>
+          </>
         ) : null}
       </div>
 
