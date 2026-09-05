@@ -61,7 +61,7 @@ function CardPage() {
             <span className="font-display text-xl italic tabular text-fg">{p.in}</span>
             {" / "}
             {p.of} cards in this week
-            {p.ready ? " · last card closed the week" : " · last card books the next week"}
+            {p.missing ? " · still taking cards" : " · every card is in. Close the week from the desk when you are ready."}
           </p>
         );
       })()}

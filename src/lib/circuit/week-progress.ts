@@ -30,6 +30,7 @@ export function weekCardProgress(
     in: have.length,
     of: need.length,
     missing: need.length - have.length,
-    ready: need.length > 0 && have.length === need.length,
+    // Saving the last card must not close the week. The desk button does that.
+    ready: false,
   };
 }
